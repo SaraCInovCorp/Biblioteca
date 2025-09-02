@@ -5,6 +5,9 @@ namespace Database\Seeders;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Editora;
+use App\Models\Autor;
+use App\Models\Livro;
 
 class DatabaseSeeder extends Seeder
 {
@@ -19,5 +22,9 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        Editora::factory()->count(10)->create();
+        Autor::factory()->count(30)->create();
+        Livro::factory()->count(60)->create();
     }
 }
