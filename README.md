@@ -1,61 +1,160 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Logo Laravel"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# Sistema de Biblioteca - Gestão de Livros, Editoras e Autores
 
-## About Laravel
+Sistema web desenvolvido com Laravel no backend e Blade no frontend, destinado a gerenciar de forma eficiente bibliotecas com controle completo de livros, editoras e autores.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+***
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tecnologias Utilizadas
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Laravel 11+** — Framework PHP robusto e moderno para backend.
+- **Blade** — Template engine nativo do Laravel para renderização server-side.
+- **Tailwind CSS \& DaisyUI** — Estilização moderna com componentes reutilizáveis.
+- **Laravel Jetstream** — Sistema de autenticação completo, incluindo autenticação em dois fatores (2FA).
+- **Maatwebsite Excel \& Barryvdh Dompdf** — Exportação para Excel e PDF, incluindo suporte a imagens e layout paisagem.
+- **SQLite** — Banco de dados leve, configurado para fácil uso em desenvolvimento local e testes.
+- **Git \& GitHub** — Controle de versão e colaboração eficiente.
 
-## Learning Laravel
+***
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Funcionalidades Principais
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- Cadastro, edição e exclusão de livros, editoras e autores.
+- Pesquisa e filtros avançados para localização rápida dos registros.
+- Paginação simples e eficiente usando o método `paginate` do Laravel, com navegação por botões Next/Back.
+- Exportação para Excel e PDF com suporte a imagens locais; imagens externas indicadas com mensagem “Imagem indisponível”.
+- Geração de PDFs em formato paisagem para melhor visualização de tabelas extensas.
+- Autenticação segura com Laravel Jetstream, incluindo suporte a autenticação em dois fatores (2FA).
+- Interface server-rendered com Blade, garantindo simplicidade, desempenho e facilidade de manutenção.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+***
 
-## Laravel Sponsors
+## Banco de Dados
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- Utiliza SQLite para armazenamento local simples e ágil.
+- O arquivo do banco `database/database.sqlite` deve ser criado manualmente (arquivo vazio).
+- Configuração padrão do Laravel já preparada para facilitar uso com SQLite.
 
-### Premium Partners
+***
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Testes e População de Dados
 
-## Contributing
+- Criadas **factories completas** para modelos Livro, Editora e Autor, permitindo geração de dados realistas para testes.
+- Implementados testes automatizados para validar relacionamentos entre livros, autores e editoras, garantindo integridade dos dados.
+- Facilita ambiente robusto para desenvolvimento e testes confiáveis.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+***
 
-## Code of Conduct
+## Instalação
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+1. Clone o repositório:
+```bash
+git clone https://github.com/SaraCInovCorp/Biblioteca.git
+cd biblioteca
+```
 
-## Security Vulnerabilities
+2. Instale dependências PHP e JavaScript:
+```bash
+composer install
+npm install
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+3. Compile os assets CSS e JS:
+```bash
+npm run build
+```
 
-## License
+4. Crie o arquivo SQLite vazio:
+```bash
+touch database/database.sqlite
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+(se estiver no Windows, crie este arquivo manualmente na pasta database)
+
+5. Configure seu arquivo `.env`, conferindo que está com:
+```
+DB_CONNECTION=sqlite
+DB_DATABASE=/caminho/absoluto/para/database/database.sqlite
+```
+
+Ou, para desenvolvimento local, algo como:
+
+```
+DB_CONNECTION=sqlite
+DB_DATABASE=database/database.sqlite
+```
+
+6. Execute migrações e seeders populando o banco:
+```bash
+php artisan migrate --seed
+```
+
+7. Inicie o servidor local:
+```bash
+php artisan serve
+```
+
+8. Acesse via navegador `bibliote.test`.
+
+***
+
+## Instalação do Laravel Jetstream com Livewire
+
+Utilizamos Laravel Jetstream para autenticação. A instalação foi feita conforme a documentação oficial:
+
+```bash
+composer require laravel/jetstream
+
+php artisan jetstream:install livewire
+```
+
+Para suporte a equipes:
+
+```bash
+php artisan jetstream:install livewire --teams
+```
+
+Depois instale dependências NPM e compile assets:
+
+```bash
+npm install
+npm run build
+```
+
+E finalize com migrações:
+
+```bash
+php artisan migrate
+```
+
+
+***
+
+## Exportação
+
+- Exportação integrada para Excel e PDF.
+- Suporte a imagens locais e tratamento de URLs externas.
+- PDF gerado em modo paisagem para maior legibilidade.
+
+***
+
+## Autenticação em Dois Fatores (2FA)
+
+- Ativação e gerenciamento de 2FA pela área do perfil do usuário.
+- Aumento significativo da segurança para acesso ao sistema.
+
+***
+
+## Estrutura das Views com Blade
+
+- Layouts e views organizados em `resources/views` usando herança e componentes Blade.
+- Uso extensivo de diretivas Blade para modularidade e eficiência.
+
+***
+
+## Contato e Contribuições
+
+O projeto está aberto para contribuições e melhorias. 
+
+***
