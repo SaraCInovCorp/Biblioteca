@@ -55,7 +55,6 @@
                     </div>
 
                     <div class="mb-4 col-span-1 lg:col-span-2">
-                        <x-secondary-button as="a" href="{{ route('livros.index') }}" class=" hover:bg-red-700 hover:text-white ">Cancelar</x-secondary-button>
                         <x-button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
                             Salvar Livro
                         </x-button>
