@@ -64,6 +64,7 @@
                         <x-secondary-button type="button" id="add-autor">
                             Adicionar Outro Autor
                         </x-secondary-button>
+               
                     </div>
 
                     <div class="mb-4 col-span-1 lg:col-span-2">
