@@ -37,6 +37,15 @@
         @endforeach
         </div>
         <div class="mt-6">
+            <div class="mb-4 flex justify-end gap-2">
+                <x-secondary-button as="a" href="{{ route('editoras.export.excel', request()->query()) }}">
+                    Exportar Excel
+                </x-secondary-button>
+                <x-secondary-button as="a" href="{{ route('editoras.export.pdf', request()->query()) }}">
+                    Exportar PDF
+                </x-secondary-button>
+            </div>
+
             {{ $editoras->links() }}
         </div>
     </main>

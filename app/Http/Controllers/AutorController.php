@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
+use App\Exports\AutoresExport;
+use Maatwebsite\Excel\Facades\Excel;
+use PDF;
 
 class AutorController extends Controller
 {
@@ -51,6 +54,24 @@ class AutorController extends Controller
 
     //     ]);
     // }
+
+    public function exportExcel(Request $request)
+    {
+        $fileName = 'autores_' . now()->format('Ymd_His') . '.xlsx';
+
+        return (new AutoresExport($request->query('query')))->download($fileName);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $autores = Autor::when($request->query('query'), fn($q) => $q->where('nome', 'like', "%{$request->query('query')}%"))
+            ->get();
+
+        $pdf = PDF::loadView('autores.export_pdf', compact('autores'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download('autores_' . now()->format('Ymd_His') . '.pdf');
+    }
 
     public function update(Request $request, Autor $autor)
     {

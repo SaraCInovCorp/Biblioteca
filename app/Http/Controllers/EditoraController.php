@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
+use App\Exports\EditorasExport;
+use Maatwebsite\Excel\Facades\Excel;
+use PDF;
 
 
 class EditoraController extends Controller
@@ -51,6 +54,22 @@ class EditoraController extends Controller
     //         'logo_url' => $editora->logo_url,
     //     ]);
     // }
+
+    public function exportExcel(Request $request)
+    {
+        $fileName = 'editoras_' . now()->format('Ymd_His') . '.xlsx';
+
+        return (new EditorasExport($request->query('query')))->download($fileName);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $editoras = Editora::when($request->query('query'), fn($q) => $q->where('nome', 'like', "%{$request->query('query')}%"))->get();
+
+        $pdf = PDF::loadView('editoras.export_pdf', compact('editoras'));
+
+        return $pdf->download('editoras_' . now()->format('Ymd_His') . '.pdf');
+    }
 
     public function update(Request $request, Editora $editora)
     {

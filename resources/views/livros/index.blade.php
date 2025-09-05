@@ -60,6 +60,15 @@
             @endforeach
         </div>
         <div class="mt-6">
+            <div class="mb-4 flex justify-end gap-2">
+                <x-secondary-button as="a" href="{{ route('livros.export.excel', request()->query()) }}" class="btn btn-success">
+                    Exportar Excel
+                </x-secondary-button>
+                <x-secondary-button as="a" href="{{ route('livros.export.pdf', request()->query()) }}" class="btn btn-danger">
+                    Exportar PDF
+                </x-secondary-button>
+            </div>
+
             {{ $livros->links() }}
         </div>
     </main>

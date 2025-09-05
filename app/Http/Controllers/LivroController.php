@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Livro;
 use App\Models\Autor;
 use App\Models\Editora;
+use App\Exports\LivrosExport;
+use Maatwebsite\Excel\Facades\Excel;
+use PDF; // Barryvdh\DomPDF\Facade\Pdf;
 
 class LivroController extends Controller
 {
@@ -27,13 +30,38 @@ class LivroController extends Controller
                     $q2->where('autores.id', $autorId);
                 });
             })
-            ->paginate(9)
+            ->paginate(6)
             ->appends($request->only(['query', 'editora', 'autor'])); // mantém filtros na paginação
 
         $editoras = Editora::all();
         $autores = Autor::all();
 
         return view('livros.index', compact('livros', 'editoras', 'autores'));
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $fileName = 'livros_' . now()->format('Ymd_His') . '.xlsx';
+
+        return (new LivrosExport(
+            $request->query('query'),
+            $request->query('editora'),
+            $request->query('autor'),
+        ))->download($fileName);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $livros = Livro::query()
+            ->when($request->query('query'), fn($q) => $q->where('titulo', 'like', "%".$request->query('query')."%"))
+            ->when($request->query('editora'), fn($q) => $q->where('editora_id', $request->query('editora')))
+            ->when($request->query('autor'), fn($q) => $q->whereHas('autores', fn($q2) => $q2->where('id', $request->query('autor'))))
+            ->get();
+
+        $pdf = PDF::loadView('livros.export_pdf', compact('livros'))
+        ->setPaper('a4', 'landscape');
+
+        return $pdf->download('livros_' . now()->format('Ymd_His') . '.pdf');
     }
 
 
