@@ -22,7 +22,7 @@ class EditoraFactory extends Factory
     {
         return [
             'nome' => fake()->company(),
-            'logo_url' => fake()->imageUrl(),
+            'logo_url' => 'https://picsum.photos/150/200?random=' . rand(1, 50),
         ];
     }
 }

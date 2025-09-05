@@ -1,17 +1,28 @@
-<x-panel>
-    <div class="card-body items-center text-center">
-        <div class="card-title group-hover:text-blue-800 transition-colors duration-300">Nome do livro</div>
-
-        <div class="py-8">
-            <h3 class="text-sm font-semibold">
-                Editora do livro
-            </h3>
-            <p class="text-sm mt-4">Autor ou Autores do Livro</p>
+@php
+    use Illuminate\Support\Str;
+@endphp
+<div class="card bg-base-100 shadow-sm border border-transparent hover:border-blue-800 group transition-colors duration-300">
+    <div class="items-center text-center rounded-t-lg  flex flex-col">
+        <div class="card-title  w-full  rounded-t-lg p-6 bg-gray-400 group-hover:text-blue-800 transition-colors duration-300 block">
+            <h2 class="w-full text-center"><a href="{{ route('livros.show', ['livro' => $livro->id]) }}">{{ $livro->titulo }}</a></h2>
         </div>
 
-        <div class="flex justify-between items-center mt-auto">
-            
-            Capa do livro
+        <div class="card-body py-8 flex flex-row items-center gap-6">
+            <div class="flex-shrink-0">
+                <img src="{{ Str::startsWith($livro->capa_url, ['http://', 'https://']) ? $livro->capa_url : asset('storage/' . $livro->capa_url) }}" 
+     alt="Capa do livro {{ $livro->titulo }}" class="w-28 h-auto rounded-md">
+            </div>
+            <div class="text-left flex-1">
+                <div class="text-sm mt-4 text-justify text-gray-700">
+                    {{ Str::limit($livro->bibliografia, 150, '...') }}
+                </div>
+                <span class="text-sm font-semibold mb-2 block">
+                    {{ $livro->editora->nome ?? 'Editora não informada' }}
+                </span>
+                <p class="text-sm mt-3">
+                    {{ $livro->autores->pluck('nome')->join(', ') ?? 'Autor não informado' }}
+                </p>
+            </div>
         </div>
     </div>
-</x-panel>
+</div>

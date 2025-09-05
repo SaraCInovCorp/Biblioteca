@@ -1,5 +1,5 @@
 <header class="w-full lg:max-w-7xl mx-auto mb-6 px-4">
-  <nav class="flex items-center justify-between">
+  <nav class="flex items-center justify-between pt-5">
 
     {{-- Logo à esquerda --}}
     <div class="flex items-center flex-shrink-0 space-x-2">
@@ -9,18 +9,18 @@
 
     {{-- Menu central --}}
     <div class="hidden md:flex space-x-8 flex-grow justify-center text-sm font-medium text-gray-700 dark:text-gray-300">
-      <x-secondary-button as="a"  href="#">Livro</x-secondary-button>
-      <x-secondary-button as="a"  href="#">Autor</x-secondary-button>
-      <x-secondary-button as="a"  href="#">Editora</x-secondary-button>
+      <x-secondary-button as="a"  href="/livros">Livro</x-secondary-button>
+      <x-secondary-button as="a"  href="/autores">Autor</x-secondary-button>
+      <x-secondary-button as="a"  href="/editoras">Editora</x-secondary-button>
     </div>
 
     {{-- Menu à direita --}}
     @if (Route::has('login'))
       <div class="flex items-center space-x-4">
         @auth
-          <x-secondary-button as="a"  href="{{ url('/dashboard') }}">
+          <!-- <x-secondary-button as="a"  href="{{ url('/dashboard') }}">
             Dashboard
-          </x-secondary-button>
+          </x-secondary-button> -->
 
           <form method="POST" action="{{ route('logout') }}" x-data>
             @csrf

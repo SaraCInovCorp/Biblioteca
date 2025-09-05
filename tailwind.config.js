@@ -17,6 +17,12 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            screens: {
+                'sm': '640px',  // small e maiores
+                'md': '768px',  // medium e maiores
+                'lg': '1024px', // large e maiores
+                
+            },
         },
     },
 
