@@ -1,16 +1,17 @@
 <x-guest-layout>
+    <x-header/>
     <x-authentication-card>
         <x-slot name="logo">
-            <x-authentication-card-logo />
+            <x-authentication-card-logo size="20" />
         </x-slot>
 
         <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-            {{ __('Before continuing, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
+            {{ __('Antes de prosseguir, por favor, confirme seu endereço de e-mail clicando no link que enviamos para sua caixa de entrada. Se você não recebeu o e-mail, teremos prazer em enviar outro para você.') }}
         </div>
 
         @if (session('status') == 'verification-link-sent')
             <div class="mb-4 font-medium text-sm text-green-600 dark:text-green-400">
-                {{ __('A new verification link has been sent to the email address you provided in your profile settings.') }}
+                {{ __('Um novo link de verificação foi enviado para o endereço de e-mail que você forneceu nas configurações do seu perfil.') }}
             </div>
         @endif
 
@@ -20,7 +21,7 @@
 
                 <div>
                     <x-button type="submit">
-                        {{ __('Resend Verification Email') }}
+                        {{ __('Reenviar e-mail de verificação') }}
                     </x-button>
                 </div>
             </form>

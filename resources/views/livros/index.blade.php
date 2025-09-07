@@ -1,5 +1,14 @@
 <x-layout>
     <main class="flex-grow">
+        <div class="py-4 w-full flex justify-between items-center">
+            <div>
+                <p class="mr-auto font-bold text-lg">Livros</p>
+                <p>Total de livros: {{ $livros->total() }}</p>
+            </div>
+            <div>
+                <x-secondary-button as="a" href="{{ route('livros.create') }}">Novo Livro</x-secondary-button>
+            </div>
+        </div>
         <form method="GET" action="{{ route('livros.index') }}" class="mb-6 flex gap-4 flex-wrap items-end">
     <div>
         <x-label for="query">Buscar título</x-label>
@@ -45,31 +54,27 @@
         Limpar filtros
     </x-secondary-button>
 </form>
-        <div class="py-4 w-full flex justify-between items-center">
-            <div>
-                <p class="mr-auto font-bold text-lg">Livros</p>
-                <p>Total de livros: {{ $livros->total() }}</p>
+        
+        @if ($livros->isEmpty())
+            <p class="text-gray-500">Nenhum livro cadastrado.</p>
+        @else
+            <div class="grid lg:grid-cols-3 gap-8 mt-6">
+                @foreach ($livros as $livro)
+                    <x-livro-card :livro="$livro" />
+                @endforeach
             </div>
-            <div>
-                <x-secondary-button as="a" href="{{ route('livros.create') }}">Novo Livro</x-secondary-button>
-            </div>
-        </div>
-        <div class="grid lg:grid-cols-3 gap-8 mt-6">
-            @foreach ($livros as $livro)
-                <x-livro-card :livro="$livro" />
-            @endforeach
-        </div>
-        <div class="mt-6">
-            <div class="mb-4 flex justify-end gap-2">
-                <x-secondary-button as="a" href="{{ route('livros.export.excel', request()->query()) }}" class="btn btn-success">
-                    Exportar Excel
-                </x-secondary-button>
-                <x-secondary-button as="a" href="{{ route('livros.export.pdf', request()->query()) }}" class="btn btn-danger">
-                    Exportar PDF
-                </x-secondary-button>
-            </div>
+            <div class="mt-6">
+                <div class="mb-4 flex justify-end gap-2">
+                    <x-secondary-button as="a" href="{{ route('livros.export.excel', request()->query()) }}" class="btn btn-success">
+                        Exportar Excel
+                    </x-secondary-button>
+                    <x-secondary-button as="a" href="{{ route('livros.export.pdf', request()->query()) }}" class="btn btn-danger">
+                        Exportar PDF
+                    </x-secondary-button>
+                </div>
 
-            {{ $livros->links() }}
-        </div>
+                {{ $livros->links() }}
+            </div>
+        @endif
     </main>
 </x-layout>

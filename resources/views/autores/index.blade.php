@@ -27,27 +27,31 @@
                 </x-secondary-button>
             </form>
         </div>
+        @if ($autores->isEmpty())
+            <p class="text-gray-500">Nenhum autor cadastrado.</p>
+        @else
        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
        @foreach ($autores as $autor)
-        <div class="flex items-center gap-4 p-4 rounded border shadow-sm bg-white">
-            <img src="{{ Str::startsWith($autor->foto_url, ['http://','https://']) ? $autor->foto_url : asset('storage/'.$autor->foto_url) }}" alt="{{ $autor->nome }}" class="w-16 h-16 rounded object-cover" />
-            <div class="flex-grow">
-            <p class="font-semibold">{{ $autor->nome }}</p>
+            <div class="flex items-center gap-4 p-4 rounded border shadow-sm bg-white">
+                <img src="{{ Str::startsWith($autor->foto_url, ['http://','https://']) ? $autor->foto_url : asset('storage/'.$autor->foto_url) }}" alt="{{ $autor->nome }}" class="w-16 h-16 rounded object-cover" />
+                <div class="flex-grow">
+                <p class="font-semibold">{{ $autor->nome }}</p>
+                </div>
+                <x-secondary-button as="a" href="{{ route('autores.show', $autor) }}">Ver detalhes</x-secondary-button>
             </div>
-            <x-secondary-button as="a" href="{{ route('autores.show', $autor) }}">Ver detalhes</x-secondary-button>
-        </div>
-        @endforeach
-        </div>
-        <div class="mt-6">
-            <div class="mb-4 flex justify-end gap-2">
-                <x-secondary-button as="a" href="{{ route('autores.export.excel', request()->query()) }}">
-                    Exportar Excel
-                </x-secondary-button>
-                <x-secondary-button as="a" href="{{ route('autores.export.pdf', request()->query()) }}">
-                    Exportar PDF
-                </x-secondary-button>
+            @endforeach
             </div>
-            {{ $autores->links() }}
-        </div>
+            <div class="mt-6">
+                <div class="mb-4 flex justify-end gap-2">
+                    <x-secondary-button as="a" href="{{ route('autores.export.excel', request()->query()) }}">
+                        Exportar Excel
+                    </x-secondary-button>
+                    <x-secondary-button as="a" href="{{ route('autores.export.pdf', request()->query()) }}">
+                        Exportar PDF
+                    </x-secondary-button>
+                </div>
+                {{ $autores->links() }}
+            </div>
+        @endif
     </main>
 </x-layout>

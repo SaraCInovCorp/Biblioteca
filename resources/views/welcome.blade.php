@@ -17,11 +17,17 @@
                 {{ $livrosFiltrados->links() }}
             </div>
         @else
+
+
             <p class="text-sm font-bold">Livros em destaque</p>
             <div class="grid lg:grid-cols-3 gap-8 mt-6">
+                @if ($livrosSorteados->isEmpty())
+                    <p class="text-gray-500">Nenhum livro cadastrado.</p>
+                @else
                 @foreach($livrosSorteados as $livro)
                     <x-livro-card :livro="$livro" />
                 @endforeach
+                @endif
             </div>
         @endif
 

@@ -25,28 +25,32 @@
             <x-secondary-button as="a" href="{{ route('editoras.index') }}" class="whitespace-nowrap min-w-[90px]">Limpar Filtros</x-secondary-button>
         </form>
         </div>
-       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-       @foreach ($editoras as $editora)
-        <div class="flex items-center gap-4 p-4 rounded border shadow-sm bg-white">
-            <img src="{{ Str::startsWith($editora->logo_url, ['http://','https://']) ? $editora->logo_url : asset('storage/'.$editora->logo_url) }}" alt="{{ $editora->nome }}" class="w-16 h-16 rounded object-cover" />
-            <div class="flex-grow">
-            <p class="font-semibold">{{ $editora->nome }}</p>
+        @if ($editoras->isEmpty())
+            <p class="text-gray-500">Nenhuma editora cadastrada.</p>
+        @else
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach ($editoras as $editora)
+            <div class="flex items-center gap-4 p-4 rounded border shadow-sm bg-white">
+                <img src="{{ Str::startsWith($editora->logo_url, ['http://','https://']) ? $editora->logo_url : asset('storage/'.$editora->logo_url) }}" alt="{{ $editora->nome }}" class="w-16 h-16 rounded object-cover" />
+                <div class="flex-grow">
+                <p class="font-semibold">{{ $editora->nome }}</p>
+                </div>
+                <x-secondary-button as="a" href="{{ route('editoras.show', $editora) }}">Ver detalhes</x-secondary-button>
             </div>
-            <x-secondary-button as="a" href="{{ route('editoras.show', $editora) }}">Ver detalhes</x-secondary-button>
-        </div>
-        @endforeach
-        </div>
-        <div class="mt-6">
-            <div class="mb-4 flex justify-end gap-2">
-                <x-secondary-button as="a" href="{{ route('editoras.export.excel', request()->query()) }}">
-                    Exportar Excel
-                </x-secondary-button>
-                <x-secondary-button as="a" href="{{ route('editoras.export.pdf', request()->query()) }}">
-                    Exportar PDF
-                </x-secondary-button>
+            @endforeach
             </div>
+            <div class="mt-6">
+                <div class="mb-4 flex justify-end gap-2">
+                    <x-secondary-button as="a" href="{{ route('editoras.export.excel', request()->query()) }}">
+                        Exportar Excel
+                    </x-secondary-button>
+                    <x-secondary-button as="a" href="{{ route('editoras.export.pdf', request()->query()) }}">
+                        Exportar PDF
+                    </x-secondary-button>
+                </div>
 
-            {{ $editoras->links() }}
-        </div>
+                {{ $editoras->links() }}
+            </div>
+        @endif
     </main>
 </x-layout>

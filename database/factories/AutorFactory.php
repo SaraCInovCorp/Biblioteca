@@ -20,7 +20,7 @@ class AutorFactory extends Factory
     {
         return [
             'nome' => $this->faker->name(),
-            'foto_url' => 'https://picsum.photos/150/200?random=' . rand(1, 50),
+            'foto_url' => 'https://picsum.photos/150/200?image=' . $this->faker->numberBetween(1, 1000),
         ];
     }
 }

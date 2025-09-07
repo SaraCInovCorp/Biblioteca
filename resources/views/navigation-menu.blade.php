@@ -15,6 +15,15 @@
                     <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                     <x-nav-link href="/livros" :active="request()->routeIs('dashboard')">
+                        {{ __('Livro') }}
+                    </x-nav-link>
+                     <x-nav-link href="/editoras" :active="request()->routeIs('dashboard')">
+                        {{ __('Editoras') }}
+                    </x-nav-link>
+                     <x-nav-link href="/autores" :active="request()->routeIs('dashboard')">
+                        {{ __('Autores') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -39,17 +48,17 @@
                                 <div class="w-60">
                                     <!-- Team Management -->
                                     <div class="block px-4 py-2 text-xs text-gray-400">
-                                        {{ __('Manage Team') }}
+                                        {{ __('Gerenciar equipa') }}
                                     </div>
 
                                     <!-- Team Settings -->
                                     <x-dropdown-link href="{{ route('teams.show', Auth::user()->currentTeam->id) }}">
-                                        {{ __('Team Settings') }}
+                                        {{ __('Configurações da equipa') }}
                                     </x-dropdown-link>
 
                                     @can('create', Laravel\Jetstream\Jetstream::newTeamModel())
                                         <x-dropdown-link href="{{ route('teams.create') }}">
-                                            {{ __('Create New Team') }}
+                                            {{ __('Criar nova equipa') }}
                                         </x-dropdown-link>
                                     @endcan
 
@@ -58,7 +67,7 @@
                                         <div class="border-t border-gray-200 dark:border-gray-600"></div>
 
                                         <div class="block px-4 py-2 text-xs text-gray-400">
-                                            {{ __('Switch Teams') }}
+                                            {{ __('Trocar de equipa') }}
                                         </div>
 
                                         @foreach (Auth::user()->allTeams() as $team)

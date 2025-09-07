@@ -2,7 +2,7 @@
     <x-header/>
     <x-authentication-card>
         <x-slot name="logo">
-            <x-authentication-card-logo size="16" />
+            <x-authentication-card-logo size="20" />
         </x-slot>
 
         <x-validation-errors class="mb-4" />
@@ -23,7 +23,7 @@
 
             <div class="mt-4">
                 <x-label for="password" value="{{ __('Password') }}" />
-                <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="current-password" />
+                <x-password-input id="password" class="mt-1" name="password" required autocomplete="current-password" />
             </div>
 
             <div class="block mt-4">
@@ -36,7 +36,7 @@
             <div class="flex items-center justify-end mt-4">
                 @if (Route::has('password.request'))
                     <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('password.request') }}">
-                        {{ __('Forgot your password?') }}
+                        {{ __('Esqueceu sua senha?') }}
                     </a>
                 @endif
 

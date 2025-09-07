@@ -25,7 +25,7 @@ class LivroFactory extends Factory
             'isbn' => $this->faker->unique()->isbn13(), 
             'editora_id' => Editora::factory(), 
             'bibliografia' => $this->faker->paragraph(),
-            'capa_url' => 'https://picsum.photos/150/200?random=' . rand(1, 50),
+            'capa_url' => 'https://picsum.photos/150/200?image=' . $this->faker->numberBetween(1, 1000),
             'preco' => $this->faker->randomFloat(2, 10, 200), 
         ];
     }

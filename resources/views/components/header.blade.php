@@ -18,10 +18,9 @@
     @if (Route::has('login'))
       <div class="flex items-center space-x-4">
         @auth
-          <!-- <x-secondary-button as="a"  href="{{ url('/dashboard') }}">
+          <x-secondary-button as="a"  href="{{ url('/dashboard') }}">
             Dashboard
-          </x-secondary-button> -->
-
+          </x-secondary-button> 
           <form method="POST" action="{{ route('logout') }}" x-data>
             @csrf
             <x-secondary-button type="submit">
