@@ -33,4 +33,9 @@ class Livro extends Model
         return $this->belongsToMany(Autor::class);
     }
 
+    public function bookRequestItems(): HasMany
+    {
+        return $this->hasMany(BookRequestItem::class, 'livro_id');
+    }
+
 }

@@ -21,19 +21,19 @@ class LivroFactory extends Factory
     public function definition(): array
     {
         return [
-            'titulo' => $this->faker->sentence(3), 
-            'isbn' => $this->faker->unique()->isbn13(), 
-            'editora_id' => Editora::factory(), 
+            'titulo' => $this->faker->sentence(3),
+            'isbn' => $this->faker->unique()->isbn13(),
+            'editora_id' => Editora::factory(),
             'bibliografia' => $this->faker->paragraph(),
             'capa_url' => 'https://picsum.photos/150/200?image=' . $this->faker->numberBetween(1, 1000),
-            'preco' => $this->faker->randomFloat(2, 10, 200), 
+            'preco' => $this->faker->randomFloat(2, 10, 200),
+            'status' => $this->faker->randomElement(['disponivel', 'indisponivel', 'requisitado']), 
         ];
     }
 
     public function configure()
     {
         return $this->afterCreating(function (Livro $livro) {
-            // Associa entre 1 a 3 autores aleatórios a cada livro criado
             $autorIds = Autor::inRandomOrder()->take(rand(1, 3))->pluck('id');
             $livro->autores()->attach($autorIds);
         });

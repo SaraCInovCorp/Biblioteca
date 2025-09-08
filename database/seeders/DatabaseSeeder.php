@@ -24,8 +24,11 @@ class DatabaseSeeder extends Seeder
 
     User::factory()->count(10)->withPersonalTeam()->create();
 
-    Editora::factory()->count(10)->create();
-    Autor::factory()->count(30)->create();
-    Livro::factory()->count(60)->create();
+    $this->call([
+        EditoraSeeder::class,
+        AutorSeeder::class,
+        LivroSeeder::class,
+        BookRequestSeeder::class,
+    ]);
     }
 }

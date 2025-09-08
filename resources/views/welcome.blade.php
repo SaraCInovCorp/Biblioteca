@@ -4,6 +4,9 @@
             <x-label for="search">Pesquise seu livro, autor ou editora:</x-label>
             <x-input type="text" name="query" id="search" value="{{ $query }}" class="w-full" placeholder="Digite para pesquisar..."/>
             <x-button type="submit" class="mt-5">Buscar</x-button>
+            <x-secondary-button as="a" href="/" class="mt-5 mx-4 px-4 py-2 border rounded text-gray-700 hover:bg-gray-200">
+        Limpar filtros
+    </x-secondary-button>
         </form>
 
         @if($livrosFiltrados)
