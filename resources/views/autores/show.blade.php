@@ -12,6 +12,7 @@
             </div>
         <div class="flex flex-row justify-end mt-4 px-4 space-x-4">
         <x-secondary-button as="a" href="{{ route('autores.index') }}" class="mt-4  py-2 px-4 ">Voltar</x-secondary-button>    
+        @if(auth()->check() && auth()->user()->isAdmin())
         <form action="{{ route('autores.destroy', $autor->id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja deletar este autor?');">
                     @csrf
                     @method('DELETE')
@@ -21,6 +22,7 @@
                 </form>
             
             <x-button type="button" onclick="window.location='{{ route('autores.edit', $autor) }}'" class="mt-4  py-2 px-4 ">Editar</x-button>
+            @endif
         </div>
     </main>
 </x-layout>

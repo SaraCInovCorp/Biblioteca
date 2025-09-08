@@ -9,9 +9,11 @@ use App\Models\Editora;
 use App\Exports\LivrosExport;
 use Maatwebsite\Excel\Facades\Excel;
 use PDF; // Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class LivroController extends Controller
 {
+    use AuthorizesRequests;
     public function index(Request $request)
     {
         $query = $request->input('query');        // texto para título
@@ -67,6 +69,7 @@ class LivroController extends Controller
 
     public function create()
     {
+        $this->authorize('create', Livro::class);
         $editoras = Editora::all();
         $autores = Autor::all();
         
@@ -75,6 +78,7 @@ class LivroController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', Livro::class);
         $validated = $request->validate([
             'titulo' => 'required|string',
             'bibliografia' => 'nullable|string',
@@ -105,6 +109,7 @@ class LivroController extends Controller
     public function edit($id)
     {
         $livro = Livro::with('autores')->findOrFail($id);
+        $this->authorize('update', $livro);
         $editoras = Editora::all();
         $autores = Autor::all();
         $selectedAutores = $livro->autores->pluck('id')->toArray();
@@ -114,6 +119,7 @@ class LivroController extends Controller
 
     public function update(Request $request, Livro $livro)
     {
+        $this->authorize('update', $livro);
         $validated = $request->validate([
             'titulo' => 'required|string',
             'bibliografia' => 'nullable|string',
@@ -138,6 +144,7 @@ class LivroController extends Controller
 
     public function destroy(Livro $livro)
     {
+        $this->authorize('delete', $livro);
         $livro->delete();
         return redirect()->route('livros.index')->with('success', 'Livro excluído com sucesso!');
     }

@@ -9,6 +9,7 @@
                 <x-button type="button" onclick="window.history.back()" class="mt-4 w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded">
                     Voltar
                 </x-button>
+                @if(auth()->check() && auth()->user()->isAdmin())
                 <x-button type="button" onclick="window.location='{{ route('livros.edit', $livro->id) }}'" class="mt-4 w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded">
                     Editar
                 </x-button>
@@ -18,6 +19,7 @@
                     <button type="submit" class="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded">
                         Deletar
                     </button>
+                    @endif
                 </form>
             </div>
             <div class="max-w-3xl p-6 bg-white rounded-lg shadow-md">

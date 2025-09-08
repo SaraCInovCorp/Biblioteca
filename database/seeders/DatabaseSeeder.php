@@ -16,15 +16,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->withPersonalTeam()->create();
 
-        User::factory()->withPersonalTeam()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+    User::factory()->admin()->withPersonalTeam()->create([
+        'name' => 'Administrador',
+        'email' => 'admin@example.com',
+    ]);
 
-        Editora::factory()->count(10)->create();
-        Autor::factory()->count(30)->create();
-        Livro::factory()->count(60)->create();
+    User::factory()->count(10)->withPersonalTeam()->create();
+
+    Editora::factory()->count(10)->create();
+    Autor::factory()->count(30)->create();
+    Livro::factory()->count(60)->create();
     }
 }

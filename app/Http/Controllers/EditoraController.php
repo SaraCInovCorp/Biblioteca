@@ -18,10 +18,12 @@ use Illuminate\Support\Facades\Cache;
 use App\Exports\EditorasExport;
 use Maatwebsite\Excel\Facades\Excel;
 use PDF;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 
 class EditoraController extends Controller
 {
+    use AuthorizesRequests;
     public function index(Request $request)
     {
         $query = $request->input('query');
@@ -73,6 +75,7 @@ class EditoraController extends Controller
 
     public function update(Request $request, Editora $editora)
     {
+        $this->authorize('update', $editora);
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -92,9 +95,17 @@ class EditoraController extends Controller
 
     public function destroy(Editora $editora)
     {
+        $this->authorize('delete', $editora);
+        if ($editora->livros()->count() > 0) {
+            return redirect()->back()
+                ->with('warning', 'Esta editora está associada a livros. Para continuar esse processo remova os livros associados a essa editora primeiro.');
+        }
+
+        
         if ($editora->foto_url) {
             \Storage::disk('public')->delete($editora->foto_url);
         }
+
         $editora->delete();
 
         return redirect()->route('editoras.index')->with('success', 'Editora excluída com sucesso.');
@@ -102,11 +113,13 @@ class EditoraController extends Controller
 
     public function create()
     {
+        $this->authorize('create', Editora::class);
         return view('editoras.create');
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', Editora::class);
         $validated = $request->validate([
             'nome' => 'required|string',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',

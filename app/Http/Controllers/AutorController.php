@@ -18,9 +18,11 @@ use Illuminate\Support\Facades\Cache;
 use App\Exports\AutoresExport;
 use Maatwebsite\Excel\Facades\Excel;
 use PDF;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class AutorController extends Controller
 {
+    use AuthorizesRequests;
     public function index(Request $request)
     {
         $query = $request->input('query');
@@ -41,6 +43,7 @@ class AutorController extends Controller
 
     public function edit(Autor $autor)
     {
+        $this->authorize('update', $autor);
         return view('autores.edit', compact('autor'));
     }
 
@@ -75,6 +78,7 @@ class AutorController extends Controller
 
     public function update(Request $request, Autor $autor)
     {
+        $this->authorize('update', $autor);
         $validated = $request->validate([
             'nome' => 'required|string',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -94,6 +98,7 @@ class AutorController extends Controller
 
     public function destroy(Autor $autor)
     {
+        $this->authorize('delete', $autor);
         if ($autor->foto_url) {
             \Storage::disk('public')->delete($autor->foto_url);
         }
@@ -104,11 +109,13 @@ class AutorController extends Controller
 
     public function create()
     {
+        $this->authorize('create', Autor::class);
         return view('autores.create');
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', Autor::class);
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',

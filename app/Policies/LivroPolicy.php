@@ -5,62 +5,54 @@ namespace App\Policies;
 use App\Models\Livro;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class LivroPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    use HandlesAuthorization;
+
+    public function viewAny(User $user): Response
     {
-        return false;
+        return Response::allow();
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Livro $livro): bool
+    public function view(User $user, Livro $livro): Response
     {
-        return false;
+        return Response::allow();
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(User $user): Response
     {
-        return false;
+        return $user->isAdmin()
+            ? Response::allow()
+            : Response::deny('Apenas administradores podem criar livros.');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Livro $livro): bool
+    public function update(User $user, Livro $livro): Response
     {
-        return false;
+        return $user->isAdmin()
+            ? Response::allow()
+            : Response::deny('Apenas administradores podem atualizar livros.');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Livro $livro): bool
+    public function delete(User $user, Livro $livro): Response
     {
-        return false;
+        return $user->isAdmin()
+            ? Response::allow()
+            : Response::deny('Apenas administradores podem deletar livros.');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Livro $livro): bool
+    public function restore(User $user, Livro $livro): Response
     {
-        return false;
+        return $user->isAdmin()
+            ? Response::allow()
+            : Response::deny('Apenas administradores podem restaurar livros.');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Livro $livro): bool
+    public function forceDelete(User $user, Livro $livro): Response
     {
-        return false;
+        return $user->isAdmin()
+            ? Response::allow()
+            : Response::deny('Apenas administradores podem deletar permanentemente livros.');
     }
 }

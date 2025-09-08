@@ -18,7 +18,7 @@ return new class extends Migration
             $table->id();
             $table->string('titulo');
             $table->string('isbn')->unique();
-            $table->foreignIdFor(Editora::class)->constrained('editoras');
+            $table->foreignIdFor(Editora::class)->constrained('editoras')->onDelete('cascade');
             $table->text('bibliografia')->nullable();
             $table->string('capa_url')->nullable();
             $table->decimal('preco', 8, 2)->nullable();

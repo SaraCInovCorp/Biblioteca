@@ -9,7 +9,9 @@
                 <p>Total de Autores: {{ $autores->total() }}</p>
             </div>
             <div>
+                @if(auth()->check() && auth()->user()->isAdmin())
                 <x-secondary-button as="a" href="{{ route('autores.create') }}">Novo Autor</x-secondary-button>
+                @endif
             </div>
         </div>
         <div class="w-full">

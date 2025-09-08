@@ -6,7 +6,9 @@
                 <p>Total de livros: {{ $livros->total() }}</p>
             </div>
             <div>
+                @if(auth()->check() && auth()->user()->isAdmin())
                 <x-secondary-button as="a" href="{{ route('livros.create') }}">Novo Livro</x-secondary-button>
+                @endif
             </div>
         </div>
         <form method="GET" action="{{ route('livros.index') }}" class="mb-6 flex gap-4 flex-wrap items-end">
