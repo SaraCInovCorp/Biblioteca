@@ -8,6 +8,9 @@ use App\Models\BookRequestItem;
 use App\Models\Livro;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\PedidoConfirmacaoMail;
+use App\Mail\PedidoNotificacaoMail;
+use App\Models\User;
 
 class BookRequestController extends Controller
 {
@@ -16,71 +19,60 @@ class BookRequestController extends Controller
         $user = Auth::user();
 
         if ($user->role === 'admin') {
-            // Admin pode ver todas requisições, com filtro opcional
             $query = BookRequest::with(['items.livro', 'user']);
         } else {
-            // Cidadão vê só suas próprias requisições
             $query = BookRequest::with(['items.livro'])
                 ->where('user_id', $user->id);
         }
 
-        // Aplicar filtro de pesquisa no índice, por exemplo filtro por data, status, etc (opcional)
-
         $bookRequests = $query->paginate(10);
 
-        // Indicadores topo (apenas admin)
         $indicators = [];
         if ($user->role === 'admin') {
             $indicators = [
-                'requisicoes_ativas' => BookRequest::where('status', 'realizada')->count(),
-                'requisicoes_30dias' => BookRequest::where('data_inicio', '>=', now()->subDays(30))->count(),
-                'livros_entregues_hoje' => BookRequestItem::whereDate('data_real_entrega', now())->count(),
+                'requisicoes_ativas'   => BookRequest::where('ativo', true)->count(),
+                'requisicoes_30dias'   => BookRequest::where('data_inicio', '>=', now()->subDays(30))->count(),
+                'livros_entregues_hoje'=> BookRequestItem::whereDate('data_real_entrega', now())->count(),
             ];
         }
 
-        return view('book_requests.index', compact('bookRequests', 'indicators'));
+        return view('requisicoes.index', compact('bookRequests', 'indicators'));
     }
 
     public function create()
     {
-        $user = Auth::user();
-
-        $this->authorize('create', BookRequest::class);
-
+        \Log::info('Entrou no método create do BookRequestController');
+        $user = Auth::user(); // já vai existir
         $livros = Livro::where('status', 'disponivel')->get();
+        $users = $user->role === 'admin'
+            ? User::where('role', 'cidadao')->get()
+            : null;
 
-        // Para admin, pode requisitar para qualquer cidadão, então lista usuários cidadãos
-        // Para cidadão, requisita para si mesmo, não precisa passar usuários
-
-        $users = $user->role === 'admin' ? \App\Models\User::where('role', 'cidadao')->get() : null;
-
-        return view('book_requests.create', compact('livros', 'users', 'user'));
+        return view('requisicoes.create', compact('livros', 'users', 'user'));
     }
 
     public function store(Request $request)
     {
-        $user = Auth::user();
-
-        $this->authorize('create', BookRequest::class);
-
-        // Validações customizadas para regra de negócio
+        $user = Auth::user(); // já vai existir
 
         $validated = $request->validate([
-            'user_id' => ['required', 'exists:users,id'],
             'data_inicio' => 'required|date',
-            'data_fim' => 'required|date|after_or_equal:data_inicio',
-            'notas' => 'nullable|string',
-            'ativo' => 'required|boolean',
-            'items' => 'required|array|min:1',
+            'data_fim'    => 'required|date|after_or_equal:data_inicio',
+            'notas'       => 'nullable|string',
+            'ativo'       => 'required|boolean',
+            'items'       => 'required|array|min:1',
             'items.*.livro_id' => 'required|exists:livros,id',
+            'user_id'     => 'nullable|exists:users,id',
         ]);
 
-        // Usuário cidadão pode só requisitar para si
-        if ($user->role === 'cidadao' && $validated['user_id'] != $user->id) {
-            abort(403, 'Você não tem permissão para requisitar para outro usuário.');
-        }
+        
+            if ($user->role === 'admin') {
+                $requestUserId = $validated['user_id'] ?? $user->id;
+            } else {
+                $requestUserId = $user->id;
+            }
 
-        // Verificar se cidadão tem menos que 3 livros requisitados simultaneamente
+        // Validação do limite de livros (apenas cidadão)
         if ($user->role === 'cidadao') {
             $countReqLivros = BookRequestItem::whereHas('bookRequest', function ($q) use ($user) {
                 $q->where('user_id', $user->id)->where('ativo', true);
@@ -91,7 +83,7 @@ class BookRequestController extends Controller
             }
         }
 
-        // Verificar se todos livros estão disponíveis
+        // Verificar disponibilidade dos livros
         foreach ($validated['items'] as $item) {
             $livro = Livro::findOrFail($item['livro_id']);
             if ($livro->status !== 'disponivel') {
@@ -99,36 +91,46 @@ class BookRequestController extends Controller
             }
         }
 
-        // Criar a requisição
-        $bookRequest = BookRequest::create([
-            'user_id' => $validated['user_id'],
-            'data_inicio' => $validated['data_inicio'],
-            'data_fim' => $validated['data_fim'],
-            'notas' => $validated['notas'] ?? null,
-            'ativo' => $validated['ativo'],
-            'status' => 'realizada',
-        ]);
+        \DB::beginTransaction();
 
-        // Criar os itens da requisição e atualizar status do livro para "requisitado"
-        foreach ($validated['items'] as $item) {
-            $bookRequest->items()->create([
-                'livro_id' => $item['livro_id'],
-                'data_real_entrega' => null,
-                'dias_decorridos' => null,
-                'status' => 'realizada',
+        try {
+            // Criar requisição
+            $bookRequest = BookRequest::create([
+                'user_id'     => $requestUserId,
+                'data_inicio' => $validated['data_inicio'],
+                'data_fim'    => $validated['data_fim'],
+                'notas'       => $validated['notas'] ?? null,
+                'ativo'       => $validated['ativo'],
             ]);
 
-            $livro = Livro::find($item['livro_id']);
-            $livro->status = 'requisitado';
-            $livro->save();
+            // Criar itens
+            foreach ($validated['items'] as $item) {
+                $bookRequest->items()->create([
+                    'livro_id'         => $item['livro_id'],
+                    'data_real_entrega'=> null,
+                    'dias_decorridos'  => null,
+                    'status'           => 'realizada',
+                ]);
+
+                $livro = Livro::find($item['livro_id']);
+                $livro->status = 'requisitado';
+                $livro->save();
+            }
+
+            \DB::commit();
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return back()->withErrors(['error' => 'Erro ao criar requisição: ' . $e->getMessage()]);
         }
 
-        // Enviar email notificação para Admins e para o cidadão solicitante (implementar Mailables)
-        // Mail::to($cidadão_email)->send(new PedidoConfirmacaoMail($bookRequest));
-        // Mail::to($lista_admins_emails)->send(new PedidoNotificacaoMail($bookRequest));
+        // Emails (opcional)
+        // Mail::to($bookRequest->user->email)->send(new PedidoConfirmacaoMail($bookRequest));
+        // Mail::to($admins)->send(new PedidoNotificacaoMail($bookRequest));
 
-        return redirect()->route('book_requests.index')->with('success', 'Requisição criada com sucesso!');
+        return redirect()->route('requisicoes.index')->with('success', 'Requisição criada com sucesso!');
     }
+
 
     public function show(BookRequest $bookRequest)
     {
@@ -136,18 +138,19 @@ class BookRequestController extends Controller
 
         $bookRequest->load(['items.livro', 'user']);
 
-        return view('book_requests.show', compact('bookRequest'));
+        return view('requisicoes.show', compact('bookRequest'));
     }
 
     public function edit(BookRequest $bookRequest)
     {
         $this->authorize('update', $bookRequest);
 
-        $livros = Livro::where('status', 'disponivel')->orWhereHas('bookRequestItems', function ($q) use ($bookRequest) {
-            $q->where('book_request_id', $bookRequest->id);
-        })->get();
+        $livros = Livro::where('status', 'disponivel')
+            ->orWhereHas('bookRequestItems', function ($q) use ($bookRequest) {
+                $q->where('book_request_id', $bookRequest->id);
+            })->get();
 
-        return view('book_requests.edit', compact('bookRequest', 'livros'));
+        return view('requisicoes.edit', compact('bookRequest', 'livros'));
     }
 
     public function update(Request $request, BookRequest $bookRequest)
@@ -156,18 +159,59 @@ class BookRequestController extends Controller
 
         $validated = $request->validate([
             'data_inicio' => 'required|date',
-            'data_fim' => 'required|date|after_or_equal:data_inicio',
-            'notas' => 'nullable|string',
-            'ativo' => 'required|boolean',
-            'status' => 'required|in:realizada,cancelada',
+            'data_fim'    => 'required|date|after_or_equal:data_inicio',
+            'notas'       => 'nullable|string',
+            'ativo'       => 'required|boolean',
         ]);
 
         $bookRequest->update($validated);
 
-        // Atualizar itens se necessário (exemplo simples)
-        // Pode implementar lógica para atualizar itens, status de entrega etc.
-
-        return redirect()->route('book_requests.show', $bookRequest)->with('success', 'Requisição atualizada com sucesso!');
+        return redirect()->route('requisicoes.show', $bookRequest)->with('success', 'Requisição atualizada com sucesso!');
     }
-}
 
+    public function searchUsers(Request $request)
+    {
+        //$this->authorize('viewAny', User::class); // opcional, controle de acesso
+        $user = $request->user();
+
+        if ($user->role !== 'admin') {
+            abort(403, 'Acesso negado');
+        }
+
+        $query = $request->get('q', '');
+
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $users = User::where('role', 'cidadao')
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('email', 'like', "%{$query}%");
+            })
+            ->limit(10)
+            ->get(['id', 'name', 'email']);
+
+        return response()->json($users);
+    }
+
+    public function searchLivros(Request $request)
+    {
+        $query = $request->get('q', '');
+
+        if(strlen($query) < 2){
+            return response()->json([]);
+        }
+
+        $livros = Livro::where('status', 'disponivel')
+            ->where(function ($q) use ($query) {
+                $q->where('titulo', 'like', "%{$query}%")
+                ->orWhere('autor', 'like', "%{$query}%");
+            })
+            ->limit(10)
+            ->get(['id', 'titulo', 'autor']);
+
+        return response()->json($livros);
+    }
+
+}

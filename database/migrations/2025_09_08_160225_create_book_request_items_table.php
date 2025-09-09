@@ -14,13 +14,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('book_request_item', function (Blueprint $table) {
+        Schema::create('book_request_items', function (Blueprint $table) {
             $table->id();
-            $table->datetime('data_real_entrega')->nullable();
-            $table->integer('dias_decorridos');
+            $table->date('data_real_entrega')->nullable();
+            $table->integer('dias_decorridos')->nullable();
             $table->enum('status',['cancelada','realizada','entregue_ok','entregue_obs','nao_entregue']);
             $table->foreignIdFor(Livro::class)->constrained('livros');
-            $table->foreignIdFor(BookRequest::class)->constrained('book_Requests');
+            $table->foreignIdFor(BookRequest::class)->constrained('book_requests');
             $table->timestamps();
         });
     }
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('book_request_item');
+        Schema::dropIfExists('book_request_items');
     }
 };

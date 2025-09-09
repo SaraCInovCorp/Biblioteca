@@ -10,8 +10,6 @@ class BookRequestItem extends Model
 {
     use HasFactory;
 
-    protected $table = 'book_request_item';
-
     protected $fillable = [
         'data_real_entrega',
         'dias_decorridos',

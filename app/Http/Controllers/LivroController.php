@@ -16,9 +16,9 @@ class LivroController extends Controller
     use AuthorizesRequests;
     public function index(Request $request)
     {
-        $query = $request->input('query');        // texto para título
-        $editoraId = $request->input('editora'); // filtro editora (id)
-        $autorId = $request->input('autor');      // filtro autor (id)
+        $query = $request->input('query');        
+        $editoraId = $request->input('editora'); 
+        $autorId = $request->input('autor');      
 
         $livros = Livro::with(['editora', 'autores'])
             ->when($query, function ($q) use ($query) {
@@ -85,6 +85,7 @@ class LivroController extends Controller
             'preco' => 'required|numeric|min:0',
             'capa' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'isbn' => 'required|digits_between:10,13|unique:livros,isbn',
+            'status' => 'required|in:disponivel,indisponivel,requisitado', 
             'editora_id' => 'required|exists:editoras,id',
             'autores' => 'required|array|min:1',
             'autores.*' => 'exists:autores,id'
@@ -126,6 +127,7 @@ class LivroController extends Controller
             'preco' => 'required|numeric|min:0',
             'capa' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'isbn' => 'required|digits_between:10,13|unique:livros,isbn,' . $livro->id,
+            'status' => 'required|in:disponivel,indisponivel,requisitado', 
             'editora_id' => 'required|exists:editoras,id',
             'autores' => 'required|array|min:1',
             'autores.*' => 'exists:autores,id'

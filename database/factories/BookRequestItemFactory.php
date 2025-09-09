@@ -4,7 +4,7 @@ namespace Database\Factories;
 use App\Models\BookRequestItem;
 use App\Models\Livro;
 use App\Models\BookRequest;
-
+use Carbon\Carbon;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -27,7 +27,6 @@ class BookRequestItemFactory extends Factory
             'dias_decorridos' => 0,
             'status' => $this->faker->randomElement(['cancelada', 'realizada', 'entregue_ok', 'entregue_obs', 'nao_entregue']),
             'livro_id' => Livro::factory(),
-            'book_request_id' => BookRequest::factory(),
         ];
     }
 

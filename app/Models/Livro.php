@@ -21,6 +21,7 @@ class Livro extends Model
         'bibliografia',
         'capa_url',
         'preco',
+        'status',
     ];
 
     public function editora(): BelongsTo

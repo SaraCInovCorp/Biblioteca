@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use App\Models\User;
 
 return new class extends Migration
 {
@@ -13,9 +14,10 @@ return new class extends Migration
     {
         Schema::create('book_requests', function (Blueprint $table) {
             $table->id();
-            $table->datetime('data_inicio');
-            $table->datetime('data_fim');
-            $table->text('notas');
+            $table->foreignIdFor(User::class)->constrained('users');
+            $table->date('data_inicio');
+            $table->date('data_fim');
+            $table->text('notas')->nullable();
             $table->boolean('ativo');
             $table->timestamps();
         });

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->text('bibliografia')->nullable();
             $table->string('capa_url')->nullable();
             $table->decimal('preco', 8, 2)->nullable();
-            $table->enum('status',['disponivel','indisponivel','requisitado']);
+            $table->enum('status',['disponivel','indisponivel','requisitado'])->nullable();
             $table->timestamps();
         });
     }

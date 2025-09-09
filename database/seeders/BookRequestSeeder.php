@@ -6,24 +6,29 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\BookRequest;
 use App\Models\BookRequestItem;
+use App\Models\Livro;
+
 
 class BookRequestSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(): void
+    public function run()
     {
-        BookRequest::factory()
-            ->count(20)
-            ->create()
-            ->each(function($request) {
-                // Cria entre 1 a 5 items para cada requisição
-                $request->items()->saveMany(
-                    BookRequestItem::factory()->count(rand(1,5))->make([
-                        'book_request_id' => $request->id,
-                    ])->all()
-                );
-            });
+        
+        BookRequest::factory()->count(20)->create()->each(function ($bookRequest) {
+            
+            $livros = Livro::where('status', 'disponivel')->inRandomOrder()->take(rand(1,3))->get();
+
+            foreach ($livros as $livro) {
+                $bookRequest->items()->create([
+                    'livro_id' => $livro->id,
+                    'data_real_entrega' => null,
+                    'dias_decorridos' => null,
+                    'status' => 'realizada',
+                ]);
+
+                
+                $livro->update(['status' => 'requisitado']);
+            }
+        });
     }
 }
