@@ -8,6 +8,7 @@ use App\Http\Controllers\AutorLivroController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\BookRequestController;
 use App\Http\Controllers\BookRequestSessionController;
+use App\Http\Controllers\AdminRegisterController;
 use App\Models\Livro;
 use App\Models\Autor;
 use App\Models\Editora;
@@ -35,22 +36,35 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
+
+    Route::get('/admin/register', [AdminRegisterController::class, 'create'])->name('admin.register');
+    Route::post('/admin/register', [AdminRegisterController::class, 'store'])->name('admin.register.store');
     
     Route::resource('livros', LivroController::class)->except(['index', 'show']);
     Route::resource('autores', AutorController::class)->parameters([
         'autores' => 'autor',
     ])->except(['index', 'show']);
     Route::resource('editoras', EditoraController::class)->except(['index', 'show']);
+    
     // Requisições protegidas
+    Route::get('requisicoes', [BookRequestController::class, 'index'])->name('requisicoes.index');
+    Route::get('/requisicoes/{bookRequest}', [BookRequestController::class, 'show'])->name('requisicoes.show');
     Route::get('requisicoes/create', [BookRequestController::class, 'create'])->name('requisicoes.create');
     Route::post('requisicoes', [BookRequestController::class, 'store'])->name('requisicoes.store');
+    Route::get('requisicoes/{bookRequest}/edit', [BookRequestController::class, 'edit'])->name('requisicoes.edit');
+    Route::put('requisicoes/{bookRequest}', [BookRequestController::class, 'update'])->name('requisicoes.update');
 
     //pesquisa de usuario
     Route::get('/users/search', [BookRequestController::class, 'searchUsers'])->name('users.search');
     //pesquisa de livros
     Route::get('/livros/search', [BookRequestController::class, 'searchLivros'])->name('livros.search');
+    //sessao requisicao
     Route::post('/requisicoes/session', [BookRequestSessionController::class, 'storeBook'])->name('requisicoes.session.store');
     Route::get('/requisicoes/session', [BookRequestSessionController::class, 'getBooks'])->name('requisicoes.session.get');
+    Route::post('/requisicoes/session/dates', [BookRequestSessionController::class, 'storeDates']);
+    Route::delete('/requisicoes/session', [BookRequestSessionController::class, 'removeBook']);
+    Route::delete('/requisicoes/session/clear', [BookRequestSessionController::class, 'clearBooks']);
+
 });
 
 Route::get('livros/export/excel', [LivroController::class, 'exportExcel'])->name('livros.export.excel');

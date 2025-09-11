@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\PedidoConfirmacaoMail;
 use App\Mail\PedidoNotificacaoMail;
 use App\Models\User;
+use Carbon\Carbon;
 
 class BookRequestController extends Controller
 {
@@ -53,13 +54,13 @@ class BookRequestController extends Controller
 
     public function store(Request $request)
     {
+        
         $user = Auth::user(); // já vai existir
 
         $validated = $request->validate([
             'data_inicio' => 'required|date',
             'data_fim'    => 'required|date|after_or_equal:data_inicio',
             'notas'       => 'nullable|string',
-            'ativo'       => 'required|boolean',
             'items'       => 'required|array|min:1',
             'items.*.livro_id' => 'required|exists:livros,id',
             'user_id'     => 'nullable|exists:users,id',
@@ -90,6 +91,7 @@ class BookRequestController extends Controller
                 return back()->withErrors(['items' => "O livro '{$livro->titulo}' não está disponível para requisição."]);
             }
         }
+        
 
         \DB::beginTransaction();
 
@@ -100,7 +102,7 @@ class BookRequestController extends Controller
                 'data_inicio' => $validated['data_inicio'],
                 'data_fim'    => $validated['data_fim'],
                 'notas'       => $validated['notas'] ?? null,
-                'ativo'       => $validated['ativo'],
+                'ativo'       => true,
             ]);
 
             // Criar itens
@@ -118,6 +120,8 @@ class BookRequestController extends Controller
             }
 
             \DB::commit();
+            $request->session()->forget('book_request');
+
 
         } catch (\Exception $e) {
             \DB::rollBack();
@@ -161,8 +165,32 @@ class BookRequestController extends Controller
             'data_inicio' => 'required|date',
             'data_fim'    => 'required|date|after_or_equal:data_inicio',
             'notas'       => 'nullable|string',
-            'ativo'       => 'required|boolean',
+            'items'       => 'required|array|min:1',
+            'items.*.livro_id' => 'required|exists:livros,id',
+            'items.*.data_real_entrega' => 'nullable|after_or_equal:data_inicio',
+            'items.*.dias_decorridos' => 'nullable',
+            'items.*.status' => 'required',
         ]);
+
+        $isAtivo = false;
+        foreach ($validated['items'] as $item) {
+
+                if (!$isAtivo) {
+                    $isAtivo = ($item['status'] == 'realizada' || $item['status'] == 'nao_entregue');
+                }
+
+                $bookRequest->items()->update([
+                    'livro_id'         => $item['livro_id'],
+                    'data_real_entrega'=> $item['data_real_entrega'],
+                    'dias_decorridos'  => $item['dias_decorridos'],
+                    'status'           => $item['status'],
+                ]);
+
+                $livro = Livro::find($item['livro_id']);
+                $livro->status = ($item['status'] != 'realizada' && $item['status'] != 'nao_entregue') ? 'disponivel' : $livro->status;
+                $livro->save();
+            }
+            $validated['ativo'] = $isAtivo;
 
         $bookRequest->update($validated);
 

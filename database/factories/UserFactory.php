@@ -79,4 +79,14 @@ class UserFactory extends Factory
             'ownedTeams'
         );
     }
+
+    public function withProfilePhoto()
+    {
+        return $this->state(function () {
+            return [
+                'profile_photo_path' => 'https://picsum.photos/150/150?image=' . $this->faker->numberBetween(1, 1000),
+            ];
+        });
+    }
+
 }

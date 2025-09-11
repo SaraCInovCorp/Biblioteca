@@ -17,6 +17,11 @@
     {{-- Menu à direita --}}
     @if (Route::has('login'))
       <div class="flex items-center space-x-4">
+        @if(auth()->check() && auth()->user()->isAdmin())
+            <x-secondary-button as="a" href="{{ route('admin.register') }}">
+                Registrar Admin
+            </x-secondary-button>
+        @endif
         @auth
           <x-secondary-button as="a"  href="{{ url('/dashboard') }}">
             Dashboard
@@ -37,6 +42,7 @@
               Register
             </x-secondary-button>
           @endif
+          
         @endauth
       </div>
     @endif

@@ -9,20 +9,86 @@ class BookRequestSessionController extends Controller
 {
     public function getBooks()
     {
-        return response()->json(session('book_request', []));
+        return response()->json(session('book_request', [
+            'livros' => [],
+            'data_inicio' => null,
+            'data_fim' => null,
+        ]));
     }
 
     public function storeBook(Request $request)
     {
         $livro = $request->input('livro');
-        $bookRequestSession = $request->session()->get('book_request', []);
 
-        // Evitar duplicatas
-        if (!collect($bookRequestSession)->contains('id', $livro['id'])) {
-            $bookRequestSession[] = $livro;
-            $request->session()->put('book_request', $bookRequestSession);
+        if (!is_array($livro) || !isset($livro['id']) || !isset($livro['titulo'])) {
+            return response()->json(['error' => 'Dados do livro inválidos'], 422);
+        }
+
+        $autor = $livro['autor'] ?? null; 
+
+        $livroCorrigido = [
+            'id' => $livro['id'],
+            'titulo' => $livro['titulo'],
+            'autor' => $autor,
+        ];
+
+        $bookRequestSession = session('book_request', [
+            'livros' => [],
+            'data_inicio' => null,
+            'data_fim' => null,
+        ]);
+
+        $livros = collect($bookRequestSession['livros']);
+
+        if (!$livros->contains('id', $livroCorrigido['id'])) {
+            $livros->push($livroCorrigido);
+            $bookRequestSession['livros'] = $livros->values()->all();
+            session(['book_request' => $bookRequestSession]);
         }
 
         return response()->json(['message' => 'OK'], 200);
     }
+
+    public function storeDates(Request $request)
+    {
+        $data = $request->only(['data_inicio', 'data_fim']);
+        $bookRequestSession = session('book_request', [
+            'livros' => [],
+            'data_inicio' => null,
+            'data_fim' => null,
+        ]);
+        $bookRequestSession['data_inicio'] = $data['data_inicio'];
+        $bookRequestSession['data_fim'] = $data['data_fim'];
+        session(['book_request' => $bookRequestSession]);
+        return response()->json(['message' => 'Datas salvas']);
+    }
+
+    public function removeBook(Request $request)
+    {
+        $livroId = $request->input('id');
+        $bookRequestSession = session('book_request', [
+            'livros' => [],
+            'data_inicio' => null,
+            'data_fim' => null,
+        ]);
+
+        $livros = collect($bookRequestSession['livros'])
+            ->reject(fn($item) => $item['id'] == $livroId)
+            ->values()
+            ->all();
+
+        $bookRequestSession['livros'] = $livros;
+        session(['book_request' => $bookRequestSession]);
+
+        return response()->json(['message' => 'OK'], 200);
+    }
+
+    public function clearBooks(Request $request)
+    {
+        session()->forget('book_request');
+
+        return response()->json(['message' => 'Limpo!']);
+    }
+
+
 }
