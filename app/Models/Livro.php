@@ -40,4 +40,9 @@ class Livro extends Model
         return $this->hasMany(BookRequestItem::class, 'livro_id');
     }
 
+    public function requisicoes()
+    {
+        return $this->hasManyThrough(BookRequest::class, BookRequestItem::class, 'livro_id', 'id', 'id', 'book_request_id');
+    }
+
 }

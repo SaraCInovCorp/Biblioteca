@@ -9,7 +9,9 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\BookRequestController;
 use App\Http\Controllers\BookRequestSessionController;
 use App\Http\Controllers\AdminRegisterController;
+use App\Http\Controllers\UserController;
 use App\Models\Livro;
+use App\Models\User;
 use App\Models\Autor;
 use App\Models\Editora;
 use App\Models\AutorLivro;
@@ -46,24 +48,28 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     ])->except(['index', 'show']);
     Route::resource('editoras', EditoraController::class)->except(['index', 'show']);
     
-    // Requisições protegidas
-    Route::get('requisicoes', [BookRequestController::class, 'index'])->name('requisicoes.index');
-    Route::get('/requisicoes/{bookRequest}', [BookRequestController::class, 'show'])->name('requisicoes.show');
-    Route::get('requisicoes/create', [BookRequestController::class, 'create'])->name('requisicoes.create');
-    Route::post('requisicoes', [BookRequestController::class, 'store'])->name('requisicoes.store');
-    Route::get('requisicoes/{bookRequest}/edit', [BookRequestController::class, 'edit'])->name('requisicoes.edit');
-    Route::put('requisicoes/{bookRequest}', [BookRequestController::class, 'update'])->name('requisicoes.update');
-
-    //pesquisa de usuario
-    Route::get('/users/search', [BookRequestController::class, 'searchUsers'])->name('users.search');
-    //pesquisa de livros
-    Route::get('/livros/search', [BookRequestController::class, 'searchLivros'])->name('livros.search');
     //sessao requisicao
     Route::post('/requisicoes/session', [BookRequestSessionController::class, 'storeBook'])->name('requisicoes.session.store');
     Route::get('/requisicoes/session', [BookRequestSessionController::class, 'getBooks'])->name('requisicoes.session.get');
     Route::post('/requisicoes/session/dates', [BookRequestSessionController::class, 'storeDates']);
     Route::delete('/requisicoes/session', [BookRequestSessionController::class, 'removeBook']);
     Route::delete('/requisicoes/session/clear', [BookRequestSessionController::class, 'clearBooks']);
+
+    // Requisições protegidas
+    Route::get('requisicoes', [BookRequestController::class, 'index'])->name('requisicoes.index');
+    Route::get('requisicoes/create', [BookRequestController::class, 'create'])->name('requisicoes.create');
+    Route::post('requisicoes', [BookRequestController::class, 'store'])->name('requisicoes.store');
+    Route::get('requisicoes/{bookRequest}/edit', [BookRequestController::class, 'edit'])->name('requisicoes.edit');
+    Route::get('/requisicoes/{bookRequest}', [BookRequestController::class, 'show'])->name('requisicoes.show');
+    Route::put('requisicoes/{bookRequest}', [BookRequestController::class, 'update'])->name('requisicoes.update');
+    Route::delete('requisicoes/{bookRequest}', [BookRequestController::class, 'destroy'])->name('requisicoes.destroy');
+
+
+    //pesquisa de usuario
+    Route::get('/users/search', [BookRequestController::class, 'searchUsers'])->name('users.search');
+    Route::get('/users/{user?}', [UserController::class, 'show'])->name('users.show');
+    //pesquisa de livros
+    Route::get('/livros/search', [BookRequestController::class, 'searchLivros'])->name('livros.search');
 
 });
 

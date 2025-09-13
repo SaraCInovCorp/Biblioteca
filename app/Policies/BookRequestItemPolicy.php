@@ -48,8 +48,12 @@ class BookRequestItemPolicy
 
     public function delete(User $user, BookRequestItem $bookRequestItem): Response
     {
-        return $user->isAdmin()
-            ? Response::allow()
-            : Response::deny('Apenas administradores podem deletar itens.');
+        $now = now();
+        if ($now->lt($bookRequest->data_inicio)) {
+            if ($user->isAdmin() || $user->id === $bookRequest->user_id) {
+                return Response::allow();
+            }
+        }
+        return Response::deny('Somente antes da data de início a requisição pode ser cancelada.');
     }
 }

@@ -79,7 +79,7 @@
                 <x-label for="data_fim" class="block">Data Fim (automático)</x-label>
                 <input type="date" name="data_fim" id="data_fim" :value="dataFim" readonly class="input input-xl w-full bg-gray-100" />
             </div>
-            
+            <x-secondary-button as="a" href="{{ route('requisicoes.index') }}" class="hover:bg-red-700 hover:text-white ">Voltar</x-secondary-button>
             <button type="button"
                 @click="limparLivros"
                 class="btn btn-ghost dark:bg-gray-800 dark:text-gray-300 hover:bg-red-500 hover:text-white dark:hover:bg-gray-700 transition ease-in-out duration-300">
@@ -88,8 +88,11 @@
             <button type="submit" :disabled="selectedLivros.length === 0" class="btn btn-wide bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 hover:bg-gray-500 dark:hover:bg-white transition ease-in-out duration-300">
                 Enviar Requisição
             </button>
-            @error('items')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror 
-            @error('error')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror 
+            @if ($errors->any())
+                @foreach ($errors->all() as $error)
+                    <p class="text-red-500 text-sm mt-1">{{ $error }}</p>
+                @endforeach
+            @endif
         </form>
 
     </main>

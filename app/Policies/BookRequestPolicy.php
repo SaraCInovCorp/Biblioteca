@@ -13,7 +13,6 @@ class BookRequestPolicy
 
     public function viewAny(User $user): Response
     {
-        // Admin vê todas as requisições, cidadão vê as suas
         return $user->isAdmin() || $user->isCidadao()
             ? Response::allow()
             : Response::deny('Acesso negado.');
@@ -21,7 +20,6 @@ class BookRequestPolicy
 
     public function view(User $user, BookRequest $bookRequest): Response
     {
-        // Admin vê qualquer requisição, cidadão só suas
         if ($user->isAdmin()) {
             return Response::allow();
         }
@@ -33,7 +31,6 @@ class BookRequestPolicy
 
     public function create(User $user): Response
     {
-        // Apenas cidadãos podem criar requisições (admins podem criar para outros)
         return ($user->isCidadao() || $user->isAdmin())
             ? Response::allow()
             : Response::deny('Você não pode criar requisições.');
@@ -41,7 +38,6 @@ class BookRequestPolicy
 
     public function update(User $user, BookRequest $bookRequest): Response
     {
-        // Apenas admin pode atualizar requisições
         return $user->isAdmin()
             ? Response::allow()
             : Response::deny('Apenas administradores podem alterar requisições.');
@@ -49,9 +45,12 @@ class BookRequestPolicy
 
     public function delete(User $user, BookRequest $bookRequest): Response
     {
-        // Apenas admin pode deletar requisições
-        return $user->isAdmin()
-            ? Response::allow()
-            : Response::deny('Apenas administradores podem deletar requisições.');
+        $now = now();
+        if ($now->lt($bookRequest->data_inicio)) {
+            if ($user->isAdmin() || $user->id === $bookRequest->user_id) {
+                return Response::allow();
+            }
+        }
+        return Response::deny('Somente antes da data de início a requisição pode ser cancelada.');
     }
 }

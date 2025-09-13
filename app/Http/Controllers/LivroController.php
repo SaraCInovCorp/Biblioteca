@@ -104,7 +104,11 @@ class LivroController extends Controller
 
     public function show(Livro $livro)
     {
-        return view('livros.show', compact('livro'));
+        $livro->load(['autores', 'editora', 'bookRequestItems.bookRequest.user']);
+
+        $historico = $livro->bookRequestItems()->with('bookRequest.user')->orderByDesc('created_at')->get();
+
+        return view('livros.show', compact('livro', 'historico'));
     }
 
     public function edit($id)
@@ -147,7 +151,20 @@ class LivroController extends Controller
     public function destroy(Livro $livro)
     {
         $this->authorize('delete', $livro);
-        $livro->delete();
-        return redirect()->route('livros.index')->with('success', 'Livro excluído com sucesso!');
+
+        if ($livro->status === 'requisitado') {
+            return redirect()->back()->withErrors(['error' => 'Não é possível alterar o status de um livro requisitado.']);
+        }
+
+        if ($livro->status === 'disponivel') {
+            $livro->status = 'indisponivel';
+        } else {
+            $livro->status = 'disponivel';
+        }
+
+        $livro->save();
+
+        return redirect()->back()->with('success', 'Status do livro atualizado com sucesso!');
     }
+
 }

@@ -12,6 +12,8 @@
       <x-secondary-button as="a"  href="/livros">Livro</x-secondary-button>
       <x-secondary-button as="a"  href="/autores">Autor</x-secondary-button>
       <x-secondary-button as="a"  href="/editoras">Editora</x-secondary-button>
+      <x-secondary-button as="a"  href="/requisicoes">Requisições</x-secondary-button>
+      <x-secondary-button as="a"  href="/users">Histórico</x-secondary-button>
     </div>
 
     {{-- Menu à direita --}}

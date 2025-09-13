@@ -18,6 +18,7 @@ class BookRequestSessionController extends Controller
 
     public function storeBook(Request $request)
     {
+        \Log::info('storeBook chamado', $request->all());
         $livro = $request->input('livro');
 
         if (!is_array($livro) || !isset($livro['id']) || !isset($livro['titulo'])) {
@@ -40,6 +41,10 @@ class BookRequestSessionController extends Controller
 
         $livros = collect($bookRequestSession['livros']);
 
+        if ($livros->count() >= 3) {
+            return response()->json(['error' => 'Você não pode requisitar mais de 3 livros simultaneamente.'], 422);
+        }
+
         if (!$livros->contains('id', $livroCorrigido['id'])) {
             $livros->push($livroCorrigido);
             $bookRequestSession['livros'] = $livros->values()->all();
@@ -48,6 +53,7 @@ class BookRequestSessionController extends Controller
 
         return response()->json(['message' => 'OK'], 200);
     }
+
 
     public function storeDates(Request $request)
     {

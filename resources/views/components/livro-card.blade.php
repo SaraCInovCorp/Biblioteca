@@ -22,6 +22,16 @@
                 <p class="text-sm mt-3">
                     {{ $livro->autores->pluck('nome')->join(', ') ?? 'Autor não informado' }}
                 </p>
+                <span class="text-sm font-semibold block mt-2">
+                    Status: 
+                    @if($livro->status === 'disponivel')
+                        <span class="text-green-600 uppercase">Disponível</span>
+                    @elseif($livro->status === 'requisitado')
+                        <span class="text-yellow-600 uppercase">Requisitado</span>
+                    @else
+                        <span class="text-red-600 uppercase">{{ ucfirst($livro->status) }}</span>
+                    @endif
+                </span>
             </div>
         </div>
     </div>

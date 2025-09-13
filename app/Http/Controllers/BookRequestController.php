@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\PedidoConfirmacaoMail;
 use App\Mail\PedidoNotificacaoMail;
 use App\Models\User;
+use App\Models\Autor;
 use Carbon\Carbon;
 
 class BookRequestController extends Controller
@@ -18,31 +19,128 @@ class BookRequestController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $filtro = $request->get('filtro', '');
+        $search = $request->input('search');
+        $statusFiltro = $request->input('status'); // ex: 'ativa' ou 'inativa'
+        $dataInicioFiltro = $request->input('data_inicio');
+        $dataFimFiltro = $request->input('data_fim');
+        $dataRealEntregaFiltro = $request->input('data_real_entrega');
+        $userIdFiltro = $request->input('user_id');
+        $itemStatusFiltro = $request->input('item_status');
 
-        if ($user->role === 'admin') {
-            $query = BookRequest::with(['items.livro', 'user']);
-        } else {
-            $query = BookRequest::with(['items.livro'])
-                ->where('user_id', $user->id);
+        $queryBase = BookRequest::with(['items', 'items.livro', 'user']);
+
+        if ($user->role !== 'admin') {
+            $queryBase->where('user_id', $user->id);
         }
 
-        $bookRequests = $query->paginate(10);
+        $ativasQuery = (clone $queryBase)
+            ->where('ativo', true)
+            ->whereHas('items', function ($q) {
+                $q->whereIn('status', ['realizada', 'nao_entregue']);
+            })
+            ->orderBy('data_inicio', 'desc');
+
+        $passadasQuery = (clone $queryBase)
+            ->where('ativo', false)
+            ->orderBy('data_inicio', 'desc');
+
+        $ativas = collect();
+        $passadas = collect();
+        $bookRequests = collect();
+
+        switch ($filtro) {
+            case 'ativas':
+                $bookRequests = $ativasQuery->paginate(10);
+                break;
+
+            case '30dias':
+                $bookRequests = $queryBase->where('data_inicio', '>=', now()->subDays(30))
+                    ->orderBy('data_inicio', 'desc')
+                    ->paginate(10);
+                break;
+
+            case 'entregues_hoje':
+                $bookRequests = $queryBase->whereHas('items', fn($q) => $q->whereDate('data_real_entrega', now()))
+                    ->orderBy('data_inicio', 'desc')
+                    ->paginate(10);
+                break;
+
+            default:
+                if ($search || $itemStatusFiltro || $statusFiltro || $dataInicioFiltro || $dataFimFiltro || $dataRealEntregaFiltro || ($user->role === 'admin' && $userIdFiltro)) {
+                    $query = BookRequest::with(['items', 'items.livro', 'user']);
+
+                    if ($search) {
+                        $query->whereHas('items.livro', fn($q) =>
+                            $q->where('titulo', 'like', "%{$search}%")
+                            ->orWhereHas('autores', fn($q2) =>
+                                $q2->where('nome', 'like', "%{$search}%")
+                            )
+                        );
+                    }
+                    \Log::info($itemStatusFiltro);
+                    if ($itemStatusFiltro) {
+                        $query->whereHas('items', fn($q) =>
+                            $q->where('status', $itemStatusFiltro)
+                        );
+                    }
+                    
+
+                    if ($statusFiltro === 'ativa') {
+                        $query->where('ativo', true);
+                    } elseif ($statusFiltro === 'inativa') {
+                        $query->where('ativo', false);
+                    }
+
+                    if ($dataInicioFiltro) {
+                        $query->whereDate('data_inicio', '=', $dataInicioFiltro);
+                    }
+
+                    if ($dataFimFiltro) {
+                        $query->whereDate('data_fim', '=', $dataFimFiltro);
+                    }
+
+                    if ($dataRealEntregaFiltro) {
+                        $query->whereHas('items', fn($q) => $q->whereDate('data_real_entrega', '=', $dataRealEntregaFiltro));
+                    }
+
+                    if ($user->role === 'admin' && $userIdFiltro) {
+                        $query->where('user_id', $userIdFiltro);
+                    } elseif ($user->role !== 'admin') {
+                        $query->where('user_id', $user->id);
+                    }
+
+                    $bookRequests = $query->orderBy('data_inicio', 'desc')->paginate(10);
+                    \Log::info($query->toSql(), $query->getBindings());
+                    \Log::info($bookRequests);
+                } else {
+                    // Nenhum filtro avançado: usar listas padrão para exibir
+                    $ativas = $ativasQuery->get();
+                    $passadas = $passadasQuery->get();
+                }
+                break;
+        }
 
         $indicators = [];
         if ($user->role === 'admin') {
             $indicators = [
-                'requisicoes_ativas'   => BookRequest::where('ativo', true)->count(),
-                'requisicoes_30dias'   => BookRequest::where('data_inicio', '>=', now()->subDays(30))->count(),
-                'livros_entregues_hoje'=> BookRequestItem::whereDate('data_real_entrega', now())->count(),
+                'requisicoes_ativas' => $ativasQuery->count(),
+                'requisicoes_30dias' => $queryBase->where('data_inicio', '>=', now()->subDays(30))->count(),
+                'livros_entregues_hoje' => BookRequestItem::whereDate('data_real_entrega', now())->count(),
             ];
         }
 
-        return view('requisicoes.index', compact('bookRequests', 'indicators'));
+        $users = $user->role === 'admin' ? User::orderBy('name')->get() : collect();
+
+        return view('requisicoes.index', compact(
+            'ativas', 'passadas', 'bookRequests', 'filtro', 'indicators',
+            'search', 'statusFiltro', 'dataInicioFiltro', 'dataFimFiltro', 'userIdFiltro', 'users', 'itemStatusFiltro', 'dataRealEntregaFiltro'
+        ));
     }
 
     public function create()
     {
-        \Log::info('Entrou no método create do BookRequestController');
+        //\Log::info('Entrou no método create do BookRequestController');
         $user = Auth::user(); // já vai existir
         $livros = Livro::where('status', 'disponivel')->get();
         $users = $user->role === 'admin'
@@ -55,7 +153,7 @@ class BookRequestController extends Controller
     public function store(Request $request)
     {
         
-        $user = Auth::user(); // já vai existir
+        $user = Auth::user(); 
 
         $validated = $request->validate([
             'data_inicio' => 'required|date',
@@ -73,7 +171,7 @@ class BookRequestController extends Controller
                 $requestUserId = $user->id;
             }
 
-        // Validação do limite de livros (apenas cidadão)
+        
         if ($user->role === 'cidadao') {
             $countReqLivros = BookRequestItem::whereHas('bookRequest', function ($q) use ($user) {
                 $q->where('user_id', $user->id)->where('ativo', true);
@@ -84,11 +182,18 @@ class BookRequestController extends Controller
             }
         }
 
-        // Verificar disponibilidade dos livros
+        
         foreach ($validated['items'] as $item) {
             $livro = Livro::findOrFail($item['livro_id']);
             if ($livro->status !== 'disponivel') {
                 return back()->withErrors(['items' => "O livro '{$livro->titulo}' não está disponível para requisição."]);
+            }
+        }
+
+        if ($user->role === 'cidadao') {
+            $dataInicio = Carbon::parse($validated['data_inicio']);
+            if ($dataInicio->lt(Carbon::today())) {
+                return back()->withErrors(['data_inicio' => 'Usuários cidadãos não podem criar requisições com data de início no passado.'])->withInput();
             }
         }
         
@@ -241,5 +346,44 @@ class BookRequestController extends Controller
 
         return response()->json($livros);
     }
+
+    public function destroy(BookRequest $bookRequest)
+    {
+        $this->authorize('delete', $bookRequest); // Se tiver política
+
+        $now = now();
+
+        if ($now->gte($bookRequest->data_inicio)) {
+            return back()->withErrors(['error' => 'Não é possível cancelar a requisição após sua data de início.']);
+        }
+
+        \DB::beginTransaction();
+
+        try {
+            // Marca requisição como inativa
+            $bookRequest->ativo = false;
+            $bookRequest->save();
+
+            // Atualiza status dos livros associados para "disponivel"
+            foreach ($bookRequest->items as $item) {
+                $livro = $item->livro;
+                $livro->status = 'disponivel';
+                $livro->save();
+
+                // Opcional: atualizar status do item da requisição para "cancelada"
+                $item->status = 'cancelada';
+                $item->save();
+            }
+
+            \DB::commit();
+
+            return redirect()->route('requisicoes.index')->with('success', 'Requisição cancelada com sucesso!');
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return back()->withErrors(['error' => 'Erro ao cancelar a requisição: ' . $e->getMessage()]);
+        }
+    }
+
 
 }

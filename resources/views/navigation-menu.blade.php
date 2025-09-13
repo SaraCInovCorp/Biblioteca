@@ -27,6 +27,12 @@
                      <x-nav-link href="/autores" :active="request()->routeIs('dashboard')">
                         {{ __('Autores') }}
                     </x-nav-link>
+                    <x-nav-link href="/requisicoes" :active="request()->routeIs('dashboard')">
+                        {{ __('Requisições') }}
+                    </x-nav-link>
+                    <x-nav-link href="/users" :active="request()->routeIs('dashboard')">
+                        {{ __('Histórico') }}
+                    </x-nav-link>
                     @if ($isAdmin)
                         <x-nav-link href="{{ route('admin.register') }}" :active="request()->routeIs('admin.register')">
                             {{ __('Registrar Admin') }}
