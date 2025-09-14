@@ -180,12 +180,5 @@ php artisan migrate
 
 ## Contato e Contribuições
 
-Este projeto está aberto a sugestões e contribuições. Para reportar problemas, solicitar recursos ou enviar pull requests, utilize o GitHub.
-
----
-
-Se precisar de ajuda para melhorias futuras, integração frontend/backend ou depuração, estamos à disposição!
-```
-
-Se precisar de arquivo `.md` completo ou outro formato, é só avisar!
+Este projeto está aberto a sugestões e contribuições.
 
