@@ -20,6 +20,7 @@ class BookRequestItemFactory extends Factory
             'data_real_entrega' => null,
             'dias_decorridos' => null,
             'status' => $status,
+            'obs' => $this->faker->boolean(30) ? $this->faker->sentence() : null, 
             'livro_id' => Livro::factory()->state(['status' => 'disponivel']),
             'book_request_id' => BookRequest::factory(),
         ];
@@ -29,7 +30,6 @@ class BookRequestItemFactory extends Factory
     {
         return $this->afterCreating(function (BookRequestItem $item) {
             $livro = $item->livro;
-            // Ao criar item, livro fica requisitado
             $livro->status = 'requisitado';
             $livro->save();
 

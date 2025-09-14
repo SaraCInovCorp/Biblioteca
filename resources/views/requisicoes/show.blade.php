@@ -95,6 +95,7 @@
                                 <p><strong>Data Entrega:</strong> {{ $item->data_real_entrega ? \Carbon\Carbon::parse($item->data_real_entrega)->format('d/m/Y') : 'Não entregue' }}</p>
                                 <p><strong>Dias corridos:</strong> {{ $item->dias_decorridos ?? '-' }}</p>
                                 <p><strong>Status:</strong> {{ ucfirst($item->status) }}</p>
+                                <p><strong>Obs:</strong> {{ ucfirst($item->obs) }}</p>
                             </div>
                         </li>
                     @endforeach

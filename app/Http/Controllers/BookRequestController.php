@@ -114,7 +114,6 @@ class BookRequestController extends Controller
                     \Log::info($query->toSql(), $query->getBindings());
                     \Log::info($bookRequests);
                 } else {
-                    // Nenhum filtro avançado: usar listas padrão para exibir
                     $ativas = $ativasQuery->get();
                     $passadas = $passadasQuery->get();
                 }
@@ -152,41 +151,36 @@ class BookRequestController extends Controller
 
     public function store(Request $request)
     {
-        
-        $user = Auth::user(); 
+        $user = Auth::user();
 
         $validated = $request->validate([
             'data_inicio' => 'required|date',
-            'data_fim'    => 'required|date|after_or_equal:data_inicio',
-            'notas'       => 'nullable|string',
-            'items'       => 'required|array|min:1',
+            'data_fim' => 'required|date|after_or_equal:data_inicio',
+            'notas' => 'nullable|string',
+            'items' => 'required|array|min:1',
             'items.*.livro_id' => 'required|exists:livros,id',
-            'user_id'     => 'nullable|exists:users,id',
+            'items.*.obs' => 'nullable|string',
+            'user_id' => 'nullable|exists:users,id',
         ]);
 
-        
-            if ($user->role === 'admin') {
-                $requestUserId = $validated['user_id'] ?? $user->id;
-            } else {
-                $requestUserId = $user->id;
-            }
+        $requestUserId = $user->role === 'admin'
+            ? ($validated['user_id'] ?? $user->id)
+            : $user->id;
 
-        
         if ($user->role === 'cidadao') {
             $countReqLivros = BookRequestItem::whereHas('bookRequest', function ($q) use ($user) {
                 $q->where('user_id', $user->id)->where('ativo', true);
             })->count();
 
             if ($countReqLivros + count($validated['items']) > 3) {
-                return back()->withErrors(['items' => 'Você já possui 3 livros requisitados em simultâneo.']);
+                return back()->withErrors(['items' => 'Você já possui 3 livros requisitados em simultâneo.'])->withInput();
             }
         }
 
-        
         foreach ($validated['items'] as $item) {
             $livro = Livro::findOrFail($item['livro_id']);
             if ($livro->status !== 'disponivel') {
-                return back()->withErrors(['items' => "O livro '{$livro->titulo}' não está disponível para requisição."]);
+                return back()->withErrors(['items' => "O livro '{$livro->titulo}' não está disponível para requisição."])->withInput();
             }
         }
 
@@ -196,27 +190,27 @@ class BookRequestController extends Controller
                 return back()->withErrors(['data_inicio' => 'Usuários cidadãos não podem criar requisições com data de início no passado.'])->withInput();
             }
         }
-        
 
         \DB::beginTransaction();
 
         try {
-            // Criar requisição
             $bookRequest = BookRequest::create([
-                'user_id'     => $requestUserId,
+                'user_id' => $requestUserId,
                 'data_inicio' => $validated['data_inicio'],
-                'data_fim'    => $validated['data_fim'],
-                'notas'       => $validated['notas'] ?? null,
-                'ativo'       => true,
+                'data_fim' => $validated['data_fim'],
+                'lembrete_enviado_em' => null,
+                'lembrete_enviado_para' => null,
+                'notas' => $validated['notas'] ?? null,
+                'ativo' => true,
             ]);
 
-            // Criar itens
             foreach ($validated['items'] as $item) {
                 $bookRequest->items()->create([
-                    'livro_id'         => $item['livro_id'],
-                    'data_real_entrega'=> null,
-                    'dias_decorridos'  => null,
-                    'status'           => 'realizada',
+                    'livro_id' => $item['livro_id'],
+                    'data_real_entrega' => null,
+                    'dias_decorridos' => null,
+                    'status' => 'realizada',
+                    'obs' => $item['obs'] ?? null,
                 ]);
 
                 $livro = Livro::find($item['livro_id']);
@@ -227,18 +221,32 @@ class BookRequestController extends Controller
             \DB::commit();
             $request->session()->forget('book_request');
 
+            $bookRequest->load(['user', 'items.livro']);
+
+            try {
+                Mail::to($bookRequest->user->email)->send(new PedidoConfirmacaoMail($bookRequest));
+            } catch (\Exception $e) {
+                \Log::error("Erro ao enviar confirmação para usuário {$bookRequest->user->email}: " . $e->getMessage());
+            }
+
+            try {
+                $admins = User::where('role', 'admin')->pluck('email')->toArray();
+
+                if (!empty($admins)) {
+                    Mail::to($admins)->send(new PedidoNotificacaoMail($bookRequest));
+                }
+            } catch (\Exception $e) {
+                \Log::error("Erro ao enviar notificação para admins: " . $e->getMessage());
+            }
+            
+            return redirect()->route('requisicoes.index')->with('success', 'Requisição criada com sucesso!');
 
         } catch (\Exception $e) {
             \DB::rollBack();
-            return back()->withErrors(['error' => 'Erro ao criar requisição: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Erro ao criar requisição: ' . $e->getMessage()])->withInput();
         }
-
-        // Emails (opcional)
-        // Mail::to($bookRequest->user->email)->send(new PedidoConfirmacaoMail($bookRequest));
-        // Mail::to($admins)->send(new PedidoNotificacaoMail($bookRequest));
-
-        return redirect()->route('requisicoes.index')->with('success', 'Requisição criada com sucesso!');
     }
+
 
 
     public function show(BookRequest $bookRequest)
@@ -268,45 +276,88 @@ class BookRequestController extends Controller
 
         $validated = $request->validate([
             'data_inicio' => 'required|date',
-            'data_fim'    => 'required|date|after_or_equal:data_inicio',
-            'notas'       => 'nullable|string',
-            'items'       => 'required|array|min:1',
+            'data_fim' => 'required|date|after_or_equal:data_inicio',
+            'notas' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'sometimes|exists:book_request_items,id', // ajustado para identificar item
             'items.*.livro_id' => 'required|exists:livros,id',
             'items.*.data_real_entrega' => 'nullable|after_or_equal:data_inicio',
             'items.*.dias_decorridos' => 'nullable',
             'items.*.status' => 'required',
+            'items.*.obs' => 'nullable|string',
         ]);
 
+        // Se a data fim mudou, limpar lembrete para reenvio
+        if ($bookRequest->data_fim != $validated['data_fim']) {
+            $bookRequest->lembrete_enviado_em = null;
+            $bookRequest->lembrete_enviado_para = null;
+        }
+
         $isAtivo = false;
-        foreach ($validated['items'] as $item) {
 
-                if (!$isAtivo) {
-                    $isAtivo = ($item['status'] == 'realizada' || $item['status'] == 'nao_entregue');
+        \DB::beginTransaction();
+
+        try {
+            foreach ($validated['items'] as $item) {
+                $isAtivo = $isAtivo || in_array($item['status'], ['realizada', 'nao_entregue']);
+
+                if (!empty($item['id'])) {
+                    // Atualiza item existente
+                    $bookRequestItem = BookRequestItem::find($item['id']);
+                    if ($bookRequestItem) {
+                        $bookRequestItem->update([
+                            'livro_id' => $item['livro_id'],
+                            'data_real_entrega' => $item['data_real_entrega'] ?? null,
+                            'dias_decorridos' => $item['dias_decorridos'] ?? null,
+                            'status' => $item['status'],
+                            'obs' => $item['obs'] ?? null,
+                        ]);
+
+                        $livro = Livro::find($item['livro_id']);
+                        $livro->status = in_array($item['status'], ['realizada', 'nao_entregue']) ? $livro->status : 'disponivel';
+                        $livro->save();
+                    }
+                } else {
+                    // Criar item novo se quiser suportar adicionar itens na edição
+                    $newItem = $bookRequest->items()->create([
+                        'livro_id' => $item['livro_id'],
+                        'data_real_entrega' => $item['data_real_entrega'] ?? null,
+                        'dias_decorridos' => $item['dias_decorridos'] ?? null,
+                        'status' => $item['status'],
+                        'obs' => $item['obs'] ?? null,
+                    ]);
+
+                    $livro = Livro::find($item['livro_id']);
+                    $livro->status = in_array($item['status'], ['realizada', 'nao_entregue']) ? $livro->status : 'disponivel';
+                    $livro->save();
                 }
-
-                $bookRequest->items()->update([
-                    'livro_id'         => $item['livro_id'],
-                    'data_real_entrega'=> $item['data_real_entrega'],
-                    'dias_decorridos'  => $item['dias_decorridos'],
-                    'status'           => $item['status'],
-                ]);
-
-                $livro = Livro::find($item['livro_id']);
-                $livro->status = ($item['status'] != 'realizada' && $item['status'] != 'nao_entregue') ? 'disponivel' : $livro->status;
-                $livro->save();
             }
+
             $validated['ativo'] = $isAtivo;
 
-        $bookRequest->update($validated);
+            // Atualiza dados do pedido
+            $bookRequest->update([
+                'data_inicio' => $validated['data_inicio'],
+                'data_fim' => $validated['data_fim'],
+                'notas' => $validated['notas'],
+                'ativo' => $validated['ativo'],
+                'lembrete_enviado_em' => $bookRequest->lembrete_enviado_em,
+                'lembrete_enviado_para' => $bookRequest->lembrete_enviado_para,
+            ]);
+
+            \DB::commit();
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return back()->withErrors(['error' => 'Erro ao atualizar requisição: ' . $e->getMessage()]);
+        }
 
         return redirect()->route('requisicoes.show', $bookRequest)->with('success', 'Requisição atualizada com sucesso!');
     }
 
+
     public function searchUsers(Request $request)
     {
-        //$this->authorize('viewAny', User::class); // opcional, controle de acesso
         $user = $request->user();
-
         if ($user->role !== 'admin') {
             abort(403, 'Acesso negado');
         }
@@ -316,11 +367,11 @@ class BookRequestController extends Controller
         if (strlen($query) < 2) {
             return response()->json([]);
         }
-
+        
         $users = User::where('role', 'cidadao')
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('email', 'like', "%{$query}%");
+                ->orWhere('email', 'like', "%{$query}%"); // incluído email aqui
             })
             ->limit(10)
             ->get(['id', 'name', 'email']);

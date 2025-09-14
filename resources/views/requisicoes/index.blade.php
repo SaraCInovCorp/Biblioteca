@@ -193,14 +193,16 @@
                                     <ul>
                                         <p class="font-semibold">Itens da Requisição</p>
                                         @foreach ($request->items as $item)
-                                            <li><a href="{{ route('livros.show', $item->livro) }}" class="text-blue-800 hover:underline">{{ $item->livro->titulo }}</a></li>
+                                            <li>
+                                                <p><a href="{{ route('livros.show', $item->livro) }}" class="text-blue-800 hover:underline">{{ $item->livro->titulo }}</a></p>
+                                                <p><b>Status:</b> {{ ucfirst($item->status) }}</p>
+                                            </li>
                                         @endforeach
                                     </ul>
                                 </div>
                                 <div>
                                     <p><b>Data da Requisição:</b> {{ Carbon::parse($request->data_inicio)->format('d/m/Y') }}</p>
                                     <p><b>Data da Entrega:</b> {{ Carbon::parse($request->data_fim)->format('d/m/Y') }}</p>
-                                    <p><b>Status:</b> {{ ucfirst($request->items->first()->status) }}</p>
                                 </div>
                             </div>
                         </div>

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->date('data_real_entrega')->nullable();
             $table->integer('dias_decorridos')->nullable();
             $table->enum('status',['cancelada','realizada','entregue_ok','entregue_obs','nao_entregue']);
+            $table->text('obs')->nullable();
             $table->foreignIdFor(Livro::class)->constrained('livros');
             $table->foreignIdFor(BookRequest::class)->constrained('book_requests');
             $table->timestamps();

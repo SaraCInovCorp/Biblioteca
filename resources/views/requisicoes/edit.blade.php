@@ -63,6 +63,7 @@
                 </div>
                 <h3 class="font-semibold mt-4 mb-2">Itens da Requisição</h3>
                 @foreach ($bookRequest->items as $i => $item)
+                    <input type="hidden" name="items[{{ $i }}][id]" value="{{ $item->id }}">
                     <div class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-6 p-4 shadow bg-gray-100">
                             <div class="mb-4 p-5">
                                 <label class="block text-sm font-medium mb-1">Livro</label>
@@ -105,11 +106,16 @@
                                 </select>
                             </div>
                             <div class="mb-4 p-5">
+                                <x-label class="block text-gray-700 font-semibold mb-2" for="obs_{{ $i }}">Obs:</x-label>
+                                <x-textarea id="obs{{ $i }}" value="{{ $bookRequest->items[$i]->obs ?? '' }}" />
+                            </div>
+                            <div class="mb-4 p-5">
                                 @else
                                     
                                         <p>Data de Entrega Real: {{ $item->data_real_entrega ? Carbon::parse($item->data_real_entrega)->format('d/m/Y') : '—' }}</p>
                                         <p>Dias Corridos: {{ $item->dias_decorridos ?? '—' }}</p>
                                         <p>Status: {{ ucfirst($item->status) }}</p>
+                                        <p>Obs: {{ ucfirst($item->obs) }}</p>
                                     
                                 @endif
                             </div>    

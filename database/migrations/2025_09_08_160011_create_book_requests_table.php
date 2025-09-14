@@ -17,6 +17,8 @@ return new class extends Migration
             $table->foreignIdFor(User::class)->constrained('users');
             $table->date('data_inicio');
             $table->date('data_fim');
+            $table->timestamp('lembrete_enviado_em')->nullable();
+            $table->string('lembrete_enviado_para')->nullable();
             $table->text('notas')->nullable();
             $table->boolean('ativo');
             $table->timestamps();

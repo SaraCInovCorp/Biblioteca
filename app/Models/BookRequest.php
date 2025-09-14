@@ -17,6 +17,8 @@ class BookRequest extends Model
         'user_id',
         'data_inicio',
         'data_fim',
+        'lembrete_enviado_em',
+        'lembrete_enviado_para', 
         'notas',
         'ativo',
 

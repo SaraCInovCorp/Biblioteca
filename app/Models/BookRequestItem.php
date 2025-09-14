@@ -14,6 +14,7 @@ class BookRequestItem extends Model
         'data_real_entrega',
         'dias_decorridos',
         'status',
+        'obs',
         'livro_id',
         'book_request_id',
     ];
