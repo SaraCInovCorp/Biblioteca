@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use PDF; // Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
 class LivroController extends Controller
 {
@@ -86,6 +87,7 @@ class LivroController extends Controller
             'titulo' => 'required|string',
             'bibliografia' => 'nullable|string',
             'preco' => 'required|numeric|min:0',
+            'capa_url' => 'nullable|string',
             'capa' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'isbn' => 'required|digits_between:10,13|unique:livros,isbn',
             'nova_editora' => 'nullable|string',
@@ -97,7 +99,7 @@ class LivroController extends Controller
             
         ]);
         Log::info($validated);
-        // Define editora
+
         if ($request->filled('nova_editora')) {
             $editora = Editora::firstOrCreate(['nome' => $request->nova_editora]);
             $editoraId = $editora->id;
@@ -105,7 +107,6 @@ class LivroController extends Controller
             $editoraId = $validated['editora_id'];
         }
 
-        // Monta array de autores (existentes + novos)
         $autor_ids = $validated['autores'] ?? [];
         if ($request->filled('novos_autores')) {
             foreach ($request->novos_autores as $novoAutor) {
@@ -118,14 +119,15 @@ class LivroController extends Controller
 
         Log::info($autor_ids);
         $autor_ids = array_filter($autor_ids, fn($id) => !empty($id));
-        // Trata upload da capa
-        $caminhoCapa = null;
         if ($request->hasFile('capa')) {
             $caminhoCapa = $request->file('capa')->store('capas', 'public');
+        } elseif ($request->filled('capa_url')) {
+            $caminhoCapa = $request->input('capa_url');
+        } else {
+            $caminhoCapa = null;
         }
         Log::info('Caminho capa: ' . $caminhoCapa);
 
-        // Monta dados do livro para criação (usando dados validados e editora id correta)
         $dadosLivro = [
             'titulo' => $validated['titulo'],
             'bibliografia' => $validated['bibliografia'] ?? null,
@@ -138,7 +140,6 @@ class LivroController extends Controller
 
         $livro = Livro::create($dadosLivro);
 
-        // Sincroniza autores com o livro
         $livro->autores()->sync($autor_ids);
         Log::info($livro);
 
@@ -153,6 +154,25 @@ class LivroController extends Controller
         $historico = $livro->bookRequestItems()->with('bookRequest.user')->orderByDesc('created_at')->get();
 
         return view('livros.show', compact('livro', 'historico'));
+    }
+
+    public function pesquisarGoogleBooks(Request $request)
+    {
+        $query = $request->query('q');
+        if (!$query) {
+            return response()->json(['error' => 'Parâmetro de busca obrigatório'], 400);
+        }
+
+        $response = Http::get('https://www.googleapis.com/books/v1/volumes', [
+            'q' => $query,
+            'maxResults' => 10,
+        ]);
+
+        if ($response->failed()) {
+            return response()->json(['error' => 'Erro ao buscar no Google Books'], 500);
+        }
+
+        return $response->json();
     }
 
     public function edit($id)

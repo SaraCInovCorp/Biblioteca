@@ -35,6 +35,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::put('livros/{livro}', [LivroController::class, 'update'])->name('livros.update');
     Route::delete('livros/{livro}', [LivroController::class, 'destroy'])->name('livros.destroy');
 
+    Route::get('/google-books', [LivroController::class, 'pesquisarGoogleBooks'])->name('google-books.search');
+
     Route::get('autores/create', [AutorController::class, 'create'])->name('autores.create');
     Route::post('autores', [AutorController::class, 'store'])->name('autores.store');
     Route::get('autores/{autor}/edit', [AutorController::class, 'edit'])->name('autores.edit');
