@@ -1,3 +1,7 @@
+@php
+  $editoraSelected = old('editora_id', '');
+  $autorSelected = old('autores.0', '');
+@endphp
 <x-layout>
     <main>
         <div>
@@ -37,22 +41,57 @@
 
                     <div class="mb-4">
                         <x-label for="editora_id" class="block text-gray-700 font-semibold mb-2">Editora:</x-label>
-                        <x-select required name="editora_id" id="editora_id" :options="$editoras->pluck('nome', 'id')->toArray()" :selected="old('editora_id')" label="editora" />
+                        <x-select  
+                            name="editora_id" 
+                            id="editora_id" 
+                            :options="$editoras->pluck('nome', 'id')->toArray()" 
+                            :selected="$editoraSelected" 
+                            label="editora" 
+                        />
                         @error('editora_id')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
+
+                        <x-label for="nova_editora" class="block text-gray-500 text-sm mt-1">Nova editora (opcional):</x-label>
+                        <x-input type="text" name="nova_editora" id="nova_editora" value="{{ old('nova_editora') }}" placeholder="Nome da nova editora"/>
+                        @error('nova_editora')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
                     </div>
 
                     <div class="mb-4 col-span-1 lg:col-span-2" id="autores-wrapper">
                         <x-label for="autores" class="block text-gray-700 font-semibold mb-2">Autor(es):</x-label>
-                        <div class="flex items-center gap-2 mb-2">
-                            <x-select  required name="autores[]" id="autores-1" :options="$autores->pluck('nome', 'id')->toArray()" :selected="old('autores', [])" label="autor" />
+
+                        <div id="autores-list">
+                            <div class="flex items-center gap-2 mb-2 autor-item">
+                                <x-select  
+                                    name="autores[]" 
+                                    id="autores-1" 
+                                    :options="$autores->pluck('nome', 'id')->toArray()" 
+                                    :selected="$autorSelected" 
+                                    label="autor" 
+                                />
+                                <button type="button" class="remove-autor btn-remove ml-2 text-red-600 font-bold px-2 rounded" title="Remover autor existente">×</button>
+                            </div>
+                        </div>
+
+                        <div class="mb-4 col-span-1 lg:col-span-2">
+                            <x-secondary-button type="button" id="add-autor">
+                                Adicionar Outro Autor Existente
+                            </x-secondary-button>
                         </div>
                     </div>
-                    
-                    <div class="mb-4 col-span-1 lg:col-span-2">
-                        <x-secondary-button type="button" id="add-autor">
-                            Adicionar Outro Autor
+
+
+                    <div class="mb-4 col-span-1 lg:col-span-2" id="novos-autores-wrapper">
+                        <x-label for="novos_autores" class="block text-gray-700 font-semibold mb-2">Novos Autor(es):</x-label>
+                        <div id="inputs-novos-autores">
+                            <div class="flex items-center gap-2 mb-2 novo-autor-item">
+                                <x-input type="text" name="novos_autores[]" id="novo-autor-1" placeholder="Nome de novo autor" class="flex-grow max-w-md" />
+                                <button type="button" class="remove-novo-autor btn-remove ml-2 text-red-600 font-bold px-2 rounded" title="Remover novo autor">×</button>
+                            </div>
+                        </div>
+                        <x-secondary-button type="button" id="add-novo-autor">
+                            Adicionar Outro Autor Novo
                         </x-secondary-button>
                     </div>
+
 
                     <div class="mb-4 col-span-1 lg:col-span-2">
                         <x-secondary-button as="a" href="{{ route('livros.index') }}" class="hover:bg-red-700 hover:text-white ">Cancelar</x-secondary-button>
@@ -66,17 +105,48 @@
     </main>
     <script>
         document.getElementById('add-autor').addEventListener('click', function () {
-            const wrapper = document.getElementById('autores-wrapper');
-            const lastSelectDiv = wrapper.querySelector('div.flex');
+            const wrapper = document.getElementById('autores-list');
+            const lastSelectDiv = wrapper.querySelector('div.autor-item');
             const newSelectDiv = lastSelectDiv.cloneNode(true);
 
             const select = newSelectDiv.querySelector('select');
-            select.value = '';
+            if (select) select.value = '';
 
-            const selectsCount = wrapper.querySelectorAll('div.flex').length + 1;
-            select.id = 'autores-' + selectsCount;
+            const selectsCount = wrapper.querySelectorAll('div.autor-item').length + 1;
+            if (select) select.id = 'autores-' + selectsCount;
 
             wrapper.appendChild(newSelectDiv);
+        });
+
+        document.getElementById('autores-list').addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-autor')) {
+                const items = this.querySelectorAll('div.autor-item');
+                if (items.length > 1) { 
+                    e.target.closest('div.autor-item').remove();
+                }
+            }
+        });
+
+
+
+        document.getElementById('add-novo-autor').addEventListener('click', function () {
+            const wrapper = document.getElementById('inputs-novos-autores');
+            const lastInputDiv = wrapper.querySelector('div.novo-autor-item');
+            const newInputDiv = lastInputDiv.cloneNode(true);
+
+            const input = newInputDiv.querySelector('input');
+            if (input) input.value = '';
+
+            wrapper.appendChild(newInputDiv);
+        });
+
+        document.getElementById('inputs-novos-autores').addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-novo-autor')) {
+                const items = this.querySelectorAll('div.novo-autor-item');
+                if (items.length > 1) {
+                    e.target.closest('div.novo-autor-item').remove();
+                }
+            }
         });
     </script>
 </x-layout>

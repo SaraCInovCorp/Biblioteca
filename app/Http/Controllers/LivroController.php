@@ -10,6 +10,7 @@ use App\Exports\LivrosExport;
 use Maatwebsite\Excel\Facades\Excel;
 use PDF; // Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Log;
 
 class LivroController extends Controller
 {
@@ -78,29 +79,72 @@ class LivroController extends Controller
 
     public function store(Request $request)
     {
+        Log::info('Entrou no create');
         $this->authorize('create', Livro::class);
+        Log::info($request);
         $validated = $request->validate([
             'titulo' => 'required|string',
             'bibliografia' => 'nullable|string',
             'preco' => 'required|numeric|min:0',
             'capa' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'isbn' => 'required|digits_between:10,13|unique:livros,isbn',
-            'status' => 'required|in:disponivel,indisponivel,requisitado', 
-            'editora_id' => 'required|exists:editoras,id',
-            'autores' => 'required|array|min:1',
-            'autores.*' => 'exists:autores,id'
+            'nova_editora' => 'nullable|string',
+            'editora_id' => 'required_without:nova_editora',
+            'novos_autores' => 'nullable|array',
+            'novos_autores.*' => 'nullable|string',
+            'autores' => 'required_without:novos_autores|array|min:1',
+            'autores.*' => 'nullable|string',
+            
         ]);
-
-        if ($request->hasFile('capa')) {
-            $validated['capa'] = $request->file('capa')->store('capas', 'public');
+        Log::info($validated);
+        // Define editora
+        if ($request->filled('nova_editora')) {
+            $editora = Editora::firstOrCreate(['nome' => $request->nova_editora]);
+            $editoraId = $editora->id;
+        } else {
+            $editoraId = $validated['editora_id'];
         }
 
-        $livro = Livro::create($validated);
+        // Monta array de autores (existentes + novos)
+        $autor_ids = $validated['autores'] ?? [];
+        if ($request->filled('novos_autores')) {
+            foreach ($request->novos_autores as $novoAutor) {
+                if ($novoAutor) {
+                    $autor = Autor::firstOrCreate(['nome' => $novoAutor]);
+                    $autor_ids[] = $autor->id;
+                }
+            }
+        }
 
-        $livro->autores()->sync($validated['autores']);
+        Log::info($autor_ids);
+        $autor_ids = array_filter($autor_ids, fn($id) => !empty($id));
+        // Trata upload da capa
+        $caminhoCapa = null;
+        if ($request->hasFile('capa')) {
+            $caminhoCapa = $request->file('capa')->store('capas', 'public');
+        }
+        Log::info('Caminho capa: ' . $caminhoCapa);
+
+        // Monta dados do livro para criação (usando dados validados e editora id correta)
+        $dadosLivro = [
+            'titulo' => $validated['titulo'],
+            'bibliografia' => $validated['bibliografia'] ?? null,
+            'preco' => $validated['preco'],
+            'capa_url' => $caminhoCapa,
+            'isbn' => $validated['isbn'],
+            'status' => 'disponivel',
+            'editora_id' => $editoraId,
+        ];
+
+        $livro = Livro::create($dadosLivro);
+
+        // Sincroniza autores com o livro
+        $livro->autores()->sync($autor_ids);
+        Log::info($livro);
 
         return redirect()->route('livros.index')->with('success', 'Livro criado com sucesso!');
     }
+
 
     public function show(Livro $livro)
     {
