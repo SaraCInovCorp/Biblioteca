@@ -9,19 +9,17 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        User::factory()->admin()->withPersonalTeam()->create([
+        User::factory()->admin()->withProfilePhoto()->withPersonalTeam()->create([
             'name' => 'Administrador',
             'email' => 'admin@example.com',
         ]);
 
-        User::factory()->count(10)->withPersonalTeam()->create();
+        User::factory()->count(10)->withProfilePhoto()->withPersonalTeam()->create();
 
-        $this->call([
-            EditoraSeeder::class,
-            AutorSeeder::class,
-            LivroSeeder::class,
-            BookRequestSeeder::class,
-        ]);
+        if (env('SEEDER_TYPE', 'faker') === 'api') {
+            $this->call(DatabaseSeederApi::class);
+        } else {
+            $this->call(DatabaseSeederFaker::class);
+        }
     }
 }
-

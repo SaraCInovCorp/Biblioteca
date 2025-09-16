@@ -28,14 +28,16 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
     Route::get('/admin/register', [AdminRegisterController::class, 'create'])->name('admin.register');
     Route::post('/admin/register', [AdminRegisterController::class, 'store'])->name('admin.register.store');
+
+    Route::get('/google-books', [LivroController::class, 'pesquisarGoogleBooks'])->name('google-books.search');
+    Route::get('/editoras/check', [EditoraController::class, 'check'])->name('editoras.check');
+    Route::get('/autores/check', [AutorController::class, 'check'])->name('autores.check');
     
     Route::get('livros/create', [LivroController::class, 'create'])->name('livros.create');
     Route::post('livros', [LivroController::class, 'store'])->name('livros.store');
     Route::get('livros/{livro}/edit', [LivroController::class, 'edit'])->name('livros.edit');
     Route::put('livros/{livro}', [LivroController::class, 'update'])->name('livros.update');
     Route::delete('livros/{livro}', [LivroController::class, 'destroy'])->name('livros.destroy');
-
-    Route::get('/google-books', [LivroController::class, 'pesquisarGoogleBooks'])->name('google-books.search');
 
     Route::get('autores/create', [AutorController::class, 'create'])->name('autores.create');
     Route::post('autores', [AutorController::class, 'store'])->name('autores.store');

@@ -118,6 +118,7 @@
         </div>
     </main>
     <script>
+        // --- Controle Adicionar / Remover autores existentes ---
         document.getElementById('add-autor').addEventListener('click', function () {
             const wrapper = document.getElementById('autores-list');
             const lastSelectDiv = wrapper.querySelector('div.autor-item');
@@ -132,6 +133,7 @@
             wrapper.appendChild(newSelectDiv);
         });
 
+        // Remove autor existente só se tiver mais de 1 campo
         document.getElementById('autores-list').addEventListener('click', function(e) {
             if (e.target.classList.contains('remove-autor')) {
                 const items = this.querySelectorAll('div.autor-item');
@@ -141,6 +143,7 @@
             }
         });
 
+        // --- Controle Adicionar / Remover novos autores (inputs texto) ---
         document.getElementById('add-novo-autor').addEventListener('click', function () {
             const wrapper = document.getElementById('inputs-novos-autores');
             const lastInputDiv = wrapper.querySelector('div.novo-autor-item');
@@ -161,6 +164,8 @@
             }
         });
 
+
+        // --- Botão pesquisa Google Books e exibição dos resultados ---
         document.getElementById('btn-pesquisar-google').addEventListener('click', async () => {
             const query = document.getElementById('pesquisa_google').value.trim();
             const resultadosDiv = document.getElementById('resultados-google');
@@ -192,43 +197,8 @@
                             <p class="text-center font-semibold">${livro.title}</p>
                         `;
 
-                        divLivro.addEventListener('click', () => {
-                            // Preenche campos do formulário
-                            document.getElementById('titulo').value = livro.title || '';
-                            document.getElementById('bibliografia').value = livro.description || '';
-                            document.getElementById('isbn').value = (livro.industryIdentifiers?.find(id => id.type.includes('ISBN'))?.identifier) || '';
-                            document.getElementById('nova_editora').value = livro.publisher || '';
-
-                            // Preenche autores na lista de novos autores (limpa antes)
-                            const wrapperNovosAutores = document.getElementById('inputs-novos-autores');
-                            wrapperNovosAutores.innerHTML = '';
-                            if(livro.authors && livro.authors.length){
-                                livro.authors.forEach(autor => {
-                                    const input = document.createElement('input');
-                                    input.type = 'text';
-                                    input.name = 'novos_autores[]';
-                                    input.value = autor;
-                                    input.className = 'flex-grow max-w-md mb-2 input input-xl';
-                                    wrapperNovosAutores.appendChild(input);
-                                });
-                            }
-
-                            // Exibe a capa e guarda a URL no input hidden, esconde input upload
-                            const imgCapa = document.getElementById('img-capa');
-                            const inputCapaUrl = document.getElementById('capa_url');
-                            const inputCapaFile = document.getElementById('capa');
-
-                            if(foto){
-                                imgCapa.src = foto;
-                                imgCapa.classList.remove('hidden');
-                                inputCapaUrl.value = foto;
-                                inputCapaFile.classList.add('hidden');
-                            } else {
-                                imgCapa.classList.add('hidden');
-                                inputCapaUrl.value = '';
-                                inputCapaFile.classList.remove('hidden');
-                            }
-
+                        divLivro.addEventListener('click', async () => {
+                            await preencheCamposComLivroGoogle(livro);
                             resultadosDiv.classList.add('hidden');
                         });
 
@@ -244,5 +214,95 @@
             }
         });
 
+
+        // --- Funções auxiliares para verificar se editora e autores existem no banco ---
+
+        async function verificarEditora(nomeEditora) {
+            if (!nomeEditora) return null;
+            const res = await fetch("{{ route('editoras.check') }}?nome=" + encodeURIComponent(nomeEditora));
+            const data = await res.json();
+            return data.id || null;
+        }
+
+        async function verificarAutores(nomesAutores) {
+            if (!nomesAutores || nomesAutores.length === 0) return [];
+            const url = new URL("{{ route('autores.check') }}");
+            nomesAutores.forEach(nome => url.searchParams.append('nomes[]', nome));
+            const res = await fetch(url.toString());
+            const data = await res.json();
+            return data || [];
+        }
+
+
+        // --- Função que preenche os campos do formulário após escolha do livro ---
+
+        async function preencheCamposComLivroGoogle(livro) {
+            // Campos básicos
+            document.getElementById('titulo').value = livro.title || '';
+            document.getElementById('bibliografia').value = livro.description || '';
+            document.getElementById('isbn').value = (livro.industryIdentifiers?.find(id => id.type.includes('ISBN'))?.identifier) || '';
+
+            // Editora
+            const nomeEditora = livro.publisher || '';
+            const idEditora = await verificarEditora(nomeEditora);
+            if (idEditora) {
+                document.getElementById('editora_id').value = idEditora;
+                document.getElementById('nova_editora').value = '';
+            } else {
+                document.getElementById('editora_id').value = '';
+                document.getElementById('nova_editora').value = nomeEditora;
+            }
+
+            // Autores
+            const nomesAutores = livro.authors || [];
+            const autoresRetorno = await verificarAutores(nomesAutores);
+
+            // Limpa selects/autores existentes e inputs novos autores
+            document.querySelectorAll('#autores-list select').forEach(s => s.value = '');
+            const wrapperNovosAutores = document.getElementById('inputs-novos-autores');
+            wrapperNovosAutores.innerHTML = '';
+
+            autoresRetorno.forEach((autor, idx) => {
+                if (autor.id) {
+                    // Seleciona autor existente e cria select se não houver posição suficiente
+                    let selects = document.querySelectorAll('#autores-list select');
+                    let select = selects[idx];
+                    if (!select) {
+                        const wrapper = document.getElementById('autores-list');
+                        const lastDiv = wrapper.querySelector('div.autor-item');
+                        const newDiv = lastDiv.cloneNode(true);
+                        wrapper.appendChild(newDiv);
+                        select = newDiv.querySelector('select');
+                    }
+                    select.value = autor.id;
+                } else {
+                    // Cria input novo autor para autores não encontrados
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.name = 'novos_autores[]';
+                    input.value = autor.nome;
+                    input.className = 'flex-grow max-w-md mb-2 input input-xl';
+                    wrapperNovosAutores.appendChild(input);
+                }
+            });
+
+            // Capa
+            const foto = livro.imageLinks?.thumbnail || '';
+            const imgCapa = document.getElementById('img-capa');
+            const inputCapaUrl = document.getElementById('capa_url');
+            const inputCapaFile = document.getElementById('capa');
+
+            if (foto) {
+                imgCapa.src = foto;
+                imgCapa.classList.remove('hidden');
+                inputCapaUrl.value = foto;
+                inputCapaFile.classList.add('hidden');
+            } else {
+                imgCapa.classList.add('hidden');
+                inputCapaUrl.value = '';
+                inputCapaFile.classList.remove('hidden');
+            }
+        }
     </script>
+
 </x-layout>

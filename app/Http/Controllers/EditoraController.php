@@ -42,9 +42,14 @@ class EditoraController extends Controller
         return view('editoras.show', compact('editora'));
     }
 
-    public function edit(Editora $editora)
+    public function check(Request $request)
     {
-        return view('editoras.edit', compact('editora'));
+        $nome = $request->query('nome');
+        $editora = Editora::where('nome', $nome)->first();
+        return response()->json([
+            'id' => $editora ? $editora->id : null,
+            'nome' => $editora ? $editora->nome : null,
+        ]);
     }
 
     // public function editJson($id)
@@ -56,6 +61,11 @@ class EditoraController extends Controller
     //         'logo_url' => $editora->logo_url,
     //     ]);
     // }
+
+    public function edit(Editora $editora)
+    {
+        return view('editoras.edit', compact('editora'));
+    }
 
     public function exportExcel(Request $request)
     {

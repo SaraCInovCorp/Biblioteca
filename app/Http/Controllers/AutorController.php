@@ -41,10 +41,18 @@ class AutorController extends Controller
         return view('autores.show', compact('autor'));
     }
 
-    public function edit(Autor $autor)
+    public function check(Request $request)
     {
-        $this->authorize('update', $autor);
-        return view('autores.edit', compact('autor'));
+        $nomes = $request->query('nomes', []);
+        $encontrados = [];
+        foreach ($nomes as $nome) {
+            $autor = Autor::where('nome', $nome)->first();
+            $encontrados[] = [
+                'nome' => $nome,
+                'id' => $autor ? $autor->id : null,
+            ];
+        }
+        return response()->json($encontrados);
     }
 
     // public function editJson($id)
@@ -57,6 +65,12 @@ class AutorController extends Controller
 
     //     ]);
     // }
+
+    public function edit(Autor $autor)
+    {
+        $this->authorize('update', $autor);
+        return view('autores.edit', compact('autor'));
+    }
 
     public function exportExcel(Request $request)
     {
