@@ -18,6 +18,30 @@ Sistema web desenvolvido com Laravel no backend e Blade no frontend, destinado a
 
 ---
 
+## Funcionalidade: Integração com API Google Books
+
+Este sistema oferece integração avançada com a API pública do Google Books para enriquecer o cadastro e população de livros, autores e editoras.
+
+- **Cadastro manual com preenchimento por API:**  
+No formulário de cadastro manual de livros, o usuário pode buscar na API Google Books pelo título. O sistema exibe os resultados e permite preencher automaticamente o formulário com as informações reais do livro selecionado.
+
+- **População automática via Seeder API:**  
+Para facilitar testes e ambientes de desenvolvimento, o sistema possui um seeder específico (`LivroApiSeeder`) que importa dados reais da API Google Books, criando livros com seus autores e editoras relacionados, gerando fotos aleatórias para itens sem imagem.
+
+- **População via Faker com Factory:**  
+Existe também o seeder tradicional que usa factories para gerar dados fictícios realistas para testes, com fotos e informações aleatórias.
+
+- **Configuração via variável de ambiente:**  
+A seleção entre popular o banco com dados via API ou dados Faker ocorre automaticamente de acordo com a variável `SEEDER_TYPE` no arquivo `.env`.  
+Exemplo:  
+  - `SEEDER_TYPE=api` para usar a API Google Books  
+  - `SEEDER_TYPE=faker` para usar dados Faker
+
+- **Garantias:**  
+Para campos obrigatórios com restrições no banco, como ISBN único, o sistema gera identificadores falsos únicos para garantir integridade dos dados.
+
+---
+
 ## Funcionalidades Principais
 
 - Cadastro, edição e exclusão de livros, editoras e autores.  
@@ -72,13 +96,14 @@ O sistema implementa um fluxo completo para o processo de requisição de livros
 ## Testes e População de Dados
 
 - Factories configuradas para gerar dados realistas para livros, editoras e autores.  
+- Seeders com opção de usar factorys ou integração com API do Google Books.
 - Testes automatizados para validar relacionamentos e regras de negócio.
 
 ---
 
 ## Instalação
 
-1. Clone o repositório:
+### 1. Clone o repositório:
 ```
 
 git clone https://github.com/SaraCInovCorp/Biblioteca.git
@@ -86,7 +111,7 @@ cd biblioteca
 
 ```
 
-2. Instale dependências PHP e JS:
+### 2. Instale dependências PHP e JS:
 ```
 
 composer install
@@ -94,45 +119,52 @@ npm install
 
 ```
 
-3. Compile assets:
+### 3. Compile assets:
 ```
 
 npm run build
 
 ```
 
-4. Crie banco SQLite vazio:
+### 4. Crie banco SQLite vazio:
 ```
+
+- Linux/Mac:
 
 touch database/database.sqlite
 
 ```
-(no Windows, crie manualmente no diretório `database`)
+- Windows:
 
-5. Configure `.env` para SQLite:
+Crie manualmente um arquivo vazio `database.sqlite` na pasta `database`
+
+### 5. Configure o `.env` para usar SQLite e escolha o tipo de seed:
 ```
 
 DB_CONNECTION=sqlite
 DB_DATABASE=database/database.sqlite
 
+SEEDER_TYPE=api (Coloca api ou faker como prefere popular sua base)
+BOOK_API_QUERY=laravel (Coloca o tema que o seeder vai popular a base)
+
 ```
 
-6. Execute migrações e seeders:
+### 6. Execute migrações e seeders:
 ```
 
 php artisan migrate --seed
 
 ```
 
-7. Inicie o servidor:
+### 7. Inicie o servidor local (se aplicável):
 ```
 
-php artisan serve
+Se estiver desenvolvendo localmente sem servidor web configurado, execute:
+php artisan serve 
 
 ```
 
-8. Acesse em http://localhost:8000 (ou conforme configurado).
-
+### 8. Acesse em http://nomedoprojeto.test (ou conforme configurado).
 ---
 
 ## Instalação do Laravel Jetstream com Livewire
@@ -182,3 +214,6 @@ php artisan migrate
 
 Este projeto está aberto a sugestões e contribuições.
 
+---
+
+Se precisar de qualquer suporte adicional, estou à disposição!
