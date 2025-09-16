@@ -5,8 +5,8 @@
 <x-layout>
     <main>
         <div>
-            <div id="resultados-google" class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 hidden">
-                <!-- Aqui os livros retornados aparecerão com imagem e título para clique -->
+            <div id="resultados-google" class="mb-6 gap-4 hidden">
+                
             </div>
             <form method="POST" action="{{ route('livros.store') }}" enctype="multipart/form-data" class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
                 @csrf
@@ -133,7 +133,6 @@
             wrapper.appendChild(newSelectDiv);
         });
 
-        // Remove autor existente só se tiver mais de 1 campo
         document.getElementById('autores-list').addEventListener('click', function(e) {
             if (e.target.classList.contains('remove-autor')) {
                 const items = this.querySelectorAll('div.autor-item');
@@ -143,7 +142,6 @@
             }
         });
 
-        // --- Controle Adicionar / Remover novos autores (inputs texto) ---
         document.getElementById('add-novo-autor').addEventListener('click', function () {
             const wrapper = document.getElementById('inputs-novos-autores');
             const lastInputDiv = wrapper.querySelector('div.novo-autor-item');
@@ -164,8 +162,6 @@
             }
         });
 
-
-        // --- Botão pesquisa Google Books e exibição dos resultados ---
         document.getElementById('btn-pesquisar-google').addEventListener('click', async () => {
             const query = document.getElementById('pesquisa_google').value.trim();
             const resultadosDiv = document.getElementById('resultados-google');
@@ -184,6 +180,7 @@
 
                 if (data.totalItems > 0) {
                     resultadosDiv.classList.remove('hidden');
+                    resultadosDiv.classList.add('grid', 'grid-cols-1', 'md:grid-cols-3');
 
                     data.items.forEach(item => {
                         const livro = item.volumeInfo;
@@ -206,6 +203,7 @@
                     });
                 } else {
                     resultadosDiv.classList.add('hidden');
+                    resultadosDiv.classList.remove('grid', 'grid-cols-1', 'md:grid-cols-3');
                     alert('Nenhum livro encontrado para a pesquisa.');
                 }
             } catch (e) {

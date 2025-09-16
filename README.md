@@ -42,6 +42,45 @@ Para campos obrigatórios com restrições no banco, como ISBN único, o sistema
 
 ---
 
+## Funcionalidade: Importação de Livros via API Google Books
+
+O sistema possui uma funcionalidade dedicada que permite importar livros diretamente da API pública do Google Books, simplificando o cadastro e enriquecendo o catálogo com dados reais.
+
+### Como Funciona
+
+- Através de uma interface própria, o usuário pode buscar livros por título, autor, editora, ISBN ou tema.
+- Os resultados aparecem em cartões com capa, título, autores e editora, exibidos responsivamente em até 4 colunas conforme o tamanho da tela.
+- O usuário pode selecionar um ou vários livros para importar.
+- Na importação, o sistema cria automaticamente os registros de livros, autores e editoras, mantendo os relacionamentos pivot corretamente.
+- Livros que tiverem ISBN ausente ou que já existam no banco são ignorados para evitar erros, sem interromper o processo.
+- Ao final da importação, o sistema exibe uma lista dos livros que não foram importados e o motivo, permitindo que sejam cadastrados manualmente depois.
+
+### Benefícios
+
+- Reduz esforço manual e erros na criação dos registros.
+- Utiliza informações oficiais e atualizadas da Google Books API.
+- Interface intuitiva, responsiva e moderna para busca e seleção.
+- Gerenciamento transparente de duplicidades e dados faltantes.
+
+### Como Utilizar
+
+- Disponível para usuários com permissão (ex.: administradores).
+- Acesse a página de importação via menu ou rota: `/livros/import`.
+- Busque pelos termos desejados e selecione os livros para importar.
+- Visualize mensagens claras sobre livros não importados ao fim do processo.
+
+### Considerações Técnicas
+
+- Paginação pode ser adicionada para buscar mais resultados da API (limite padrão da Google Books é 40 por consulta).
+- A funcionalidade integra-se com as policies do Laravel para controle de acesso.
+- O campo ISBN é utilizado como identificador único para prevenir cadastros duplicados.
+
+---
+
+Este recurso facilita a manutenção e atualização do acervo, integrando informações reais e garantindo a qualidade dos dados do sistema.
+
+---
+
 ## Funcionalidades Principais
 
 - Cadastro, edição e exclusão de livros, editoras e autores.  

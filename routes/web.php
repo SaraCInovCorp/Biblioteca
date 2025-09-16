@@ -10,6 +10,7 @@ use App\Http\Controllers\BookRequestController;
 use App\Http\Controllers\BookRequestSessionController;
 use App\Http\Controllers\AdminRegisterController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\LivroImportController;
 use App\Models\Livro;
 use App\Models\User;
 use App\Models\Autor;
@@ -33,6 +34,11 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('/editoras/check', [EditoraController::class, 'check'])->name('editoras.check');
     Route::get('/autores/check', [AutorController::class, 'check'])->name('autores.check');
     
+    // Rotas para importação via API Google Books
+    Route::get('/livros/import', [LivroImportController::class, 'showImportPage'])->name('livros.import.page');
+    Route::get('/livros/import/search', [LivroImportController::class, 'searchGoogleBooks'])->name('livros.import.search');
+    Route::post('/livros/import', [LivroImportController::class, 'importSelected'])->name('livros.import.store');
+
     Route::get('livros/create', [LivroController::class, 'create'])->name('livros.create');
     Route::post('livros', [LivroController::class, 'store'])->name('livros.store');
     Route::get('livros/{livro}/edit', [LivroController::class, 'edit'])->name('livros.edit');

@@ -12,8 +12,10 @@
             {{-- Formulário de busca --}}
 
             <form method="GET" action="{{ route('users.show') }}" class="gap-5 m-6">
-                <x-input type="text" name="q" value="{{ $searchTerm }}" placeholder="Buscar usuário por ID ou nome ou e-mail..." class="border rounded px-3 py-2 w-full max-w-md" autocomplete="off" />
-                <x-button type="submit">Buscar</x-button>
+                <div class="flex gap-5 max-w-full">
+                    <x-input type="text" name="q" value="{{ $searchTerm }}" placeholder="Buscar usuário por ID ou nome ou e-mail..." autocomplete="off" class="flex-grow" />
+                    <x-button type="submit">Buscar</x-button>
+                </div>
             </form>
             @if(!empty($message))
                 <p class="text-red-600 font-semibold mb-4">{{ $message }}</p>
