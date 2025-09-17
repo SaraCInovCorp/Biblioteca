@@ -6,7 +6,9 @@
     <main>
         <div class="flex flex-row items-start justify-center gap-6 mt-6 max-w-5xl mx-auto">
             <div class="flex-shrink-0">
-                <img src="{{ Str::startsWith($livro->capa_url, ['http://','https://']) ? $livro->capa_url : asset('storage/'.$livro->capa_url) }}" alt="Capa do livro {{ $livro->titulo }}">
+                <img src="{{ Str::startsWith($livro->capa_url, ['http://','https://']) ? $livro->capa_url : asset('storage/'.$livro->capa_url) }}" 
+                    alt="Capa do livro {{ $livro->titulo }}" 
+                    style="max-width: 300px; height: auto;">
                 <x-button type="button" onclick="window.history.back()" class="mt-4 w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded">
                     Voltar
                 </x-button>

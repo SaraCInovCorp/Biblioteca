@@ -10,9 +10,6 @@ use Illuminate\Support\Facades\Http;
 
 class LivroImportController extends Controller
 {
-    /**
-     * Exibe a página de importação.
-     */
     public function showImportPage()
     {
         $this->authorize('create', Livro::class);
@@ -20,9 +17,6 @@ class LivroImportController extends Controller
         return view('livros.import');
     }
 
-    /**
-     * Busca livros na API Google Books conforme o termo.
-     */
     public function searchGoogleBooks(Request $request)
     {
         $this->authorize('create', Livro::class);
@@ -44,9 +38,6 @@ class LivroImportController extends Controller
         return $response->json();
     }
 
-    /**
-     * Importa os livros selecionados.
-     */
     public function importSelected(Request $request)
     {
         $this->authorize('create', Livro::class);
@@ -61,7 +52,6 @@ class LivroImportController extends Controller
         foreach ($livros as $itemJson) {
             $item = json_decode($itemJson, true);
 
-            // Validação: ISBN presente e não vazio
             $isbn = $item['isbn'] ?? null;
             if (empty($isbn)) {
                 $naoImportados[] = [
@@ -71,7 +61,6 @@ class LivroImportController extends Controller
                 continue;
             }
 
-            // Evitar duplicidade
             if (Livro::where('isbn', $isbn)->exists()) {
                 $naoImportados[] = [
                     'titulo' => $item['title'] ?? 'Título desconhecido',
@@ -80,13 +69,11 @@ class LivroImportController extends Controller
                 continue;
             }
 
-            // Criar ou pegar editora
             $editora = null;
             if (!empty($item['publisher'])) {
                 $editora = Editora::firstOrCreate(['nome' => $item['publisher']]);
             }
 
-            // Criar livro
             $livro = Livro::create([
                 'isbn' => $isbn,
                 'titulo' => $item['title'] ?? 'Sem título',
@@ -97,7 +84,6 @@ class LivroImportController extends Controller
                 'editora_id' => $editora?->id,
             ]);
 
-            // Criar autores e ligar ao livro
             $autorIds = [];
             foreach ($item['authors'] ?? [] as $nomeAutor) {
                 $autor = Autor::firstOrCreate(['nome' => $nomeAutor]);

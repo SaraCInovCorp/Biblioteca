@@ -8,7 +8,7 @@
             <div id="resultados-google" class="mb-6 gap-4 hidden">
                 
             </div>
-            <form method="POST" action="{{ route('livros.store') }}" enctype="multipart/form-data" class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+            <form method="POST" action="{{ route('livros.store') }}" enctype="multipart/form-data" class="mx-auto bg-white p-6 rounded-lg shadow-md">
                 @csrf
                 <div class="mb-4 col-span-1 lg:col-span-2">
                     <x-label for="pesquisa_google" class="block text-gray-700 font-semibold mb-2">Pesquisar Livro no Google Books:</x-label>
@@ -35,7 +35,7 @@
                     
                     <div class="mb-4">
                         <x-label for="preco" class="block text-gray-700 font-semibold mb-2">Preço:</x-label>
-                        <x-input type="number" name="preco" id="preco" step="0.01" min="0" value="{{ old('preco') }}" placeholder="Ex: 49.90" required/>
+                        <input type="number" name="preco" id="preco" step="0.01" min="0" value="{{ old('preco') }}" placeholder="Ex: 49.90" required/>
                         @error('preco')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
                     </div>
                     
@@ -231,16 +231,16 @@
             return data || [];
         }
 
-
-        // --- Função que preenche os campos do formulário após escolha do livro ---
-
         async function preencheCamposComLivroGoogle(livro) {
-            // Campos básicos
+            
             document.getElementById('titulo').value = livro.title || '';
             document.getElementById('bibliografia').value = livro.description || '';
             document.getElementById('isbn').value = (livro.industryIdentifiers?.find(id => id.type.includes('ISBN'))?.identifier) || '';
-
-            // Editora
+            const preco = livro.saleInfo?.listPrice?.amount || '';
+            const precoInput = document.getElementById('preco');
+            precoInput.value = preco;
+            precoInput.dispatchEvent(new Event('input', { bubbles: true }));
+            precoInput.focus();
             const nomeEditora = livro.publisher || '';
             const idEditora = await verificarEditora(nomeEditora);
             if (idEditora) {
@@ -251,18 +251,15 @@
                 document.getElementById('nova_editora').value = nomeEditora;
             }
 
-            // Autores
             const nomesAutores = livro.authors || [];
             const autoresRetorno = await verificarAutores(nomesAutores);
 
-            // Limpa selects/autores existentes e inputs novos autores
             document.querySelectorAll('#autores-list select').forEach(s => s.value = '');
             const wrapperNovosAutores = document.getElementById('inputs-novos-autores');
             wrapperNovosAutores.innerHTML = '';
 
             autoresRetorno.forEach((autor, idx) => {
                 if (autor.id) {
-                    // Seleciona autor existente e cria select se não houver posição suficiente
                     let selects = document.querySelectorAll('#autores-list select');
                     let select = selects[idx];
                     if (!select) {
@@ -274,7 +271,6 @@
                     }
                     select.value = autor.id;
                 } else {
-                    // Cria input novo autor para autores não encontrados
                     const input = document.createElement('input');
                     input.type = 'text';
                     input.name = 'novos_autores[]';
@@ -283,8 +279,6 @@
                     wrapperNovosAutores.appendChild(input);
                 }
             });
-
-            // Capa
             const foto = livro.imageLinks?.thumbnail || '';
             const imgCapa = document.getElementById('img-capa');
             const inputCapaUrl = document.getElementById('capa_url');

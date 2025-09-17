@@ -21,7 +21,7 @@ class LivroApiSeeder extends Seeder
 
         $response = Http::get('https://www.googleapis.com/books/v1/volumes', [
             'q' => $q,
-            'maxResults' => 10, // ajuste o número que desejar
+            'maxResults' => 40, 
         ]);
 
         if ($response->successful()) {
@@ -30,51 +30,60 @@ class LivroApiSeeder extends Seeder
             foreach ($items as $index => $item) {
                 $volumeInfo = $item['volumeInfo'];
 
-                // Cria ou obtém editora com foto faker para novos
-                $editora = null;
-                if (!empty($volumeInfo['publisher'])) {
-                    $editora = Editora::firstOrCreate(
-                        ['nome' => $volumeInfo['publisher']],
-                        ['logo_url' => 'https://picsum.photos/150/200?image=' . rand(1, 1000)]
-                    );
+                if (
+                    empty($volumeInfo['publisher']) ||
+                    empty($volumeInfo['authors']) ||
+                    empty($volumeInfo['industryIdentifiers']) ||
+                    !$this->hasValidIsbn($volumeInfo['industryIdentifiers'])
+                ) {
+                    continue; 
                 }
 
-                // Extrai o ISBN ou gera um falso único se não existir
-                $isbn = $this->extractIsbn($volumeInfo['industryIdentifiers'] ?? [], $index);
+                $editora = Editora::firstOrCreate(
+                    ['nome' => $volumeInfo['publisher']],
+                    ['logo_url' => 'https://picsum.photos/150/200?image=' . rand(1, 1000)]
+                );
 
-                // Cria o livro
+                $isbn = $this->extractIsbn($volumeInfo['industryIdentifiers'] ?? [], $index);
+                $preco = $item['saleInfo']['listPrice']['amount'] ?? rand(10, 200);
                 $livro = Livro::create([
                     'titulo' => $volumeInfo['title'] ?? 'Sem título',
                     'isbn' => $isbn,
                     'bibliografia' => $volumeInfo['description'] ?? null,
                     'capa_url' => $volumeInfo['imageLinks']['thumbnail'] ?? null,
-                    'preco' => rand(10, 200),
+                    'preco' => $preco,
                     'status' => 'disponivel',
                     'editora_id' => $editora?->id,
                 ]);
 
-                // Cria autores novos ou existentes com foto faker
-                if (!empty($volumeInfo['authors'])) {
-                    $autor_ids = [];
-                    foreach ($volumeInfo['authors'] as $nomeAutor) {
-                        $autor = Autor::firstOrCreate(
-                            ['nome' => $nomeAutor],
-                            ['foto_url' => 'https://picsum.photos/150/200?image=' . rand(1, 1000)]
-                        );
-                        $autor_ids[] = $autor->id;
-                    }
-                    $livro->autores()->sync($autor_ids);
+                $autor_ids = [];
+                foreach ($volumeInfo['authors'] as $nomeAutor) {
+                    $autor = Autor::firstOrCreate(
+                        ['nome' => $nomeAutor],
+                        ['foto_url' => 'https://picsum.photos/150/200?image=' . rand(1, 1000)]
+                    );
+                    $autor_ids[] = $autor->id;
                 }
+                $livro->autores()->sync($autor_ids);
             }
         }
     }
 
+    /**
+     * Checa se existe ISBN válido no array dos identificadores.
+     */
+    private function hasValidIsbn(array $identifiers): bool
+    {
+        foreach ($identifiers as $id) {
+            if (str_contains($id['type'], 'ISBN') && !empty($id['identifier'])) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
-     * Extrai ISBN ou gera um falso único se não encontrado
-     * @param array $identifiers Array da API com tipos e identificadores
-     * @param int $index índice do loop para ajudar a garantir unicidade
-     * @return string ISBN real ou fake único
+     * Extrai ISBN ou cria um falso único.
      */
     private function extractIsbn(array $identifiers, int $index): string
     {
@@ -83,7 +92,6 @@ class LivroApiSeeder extends Seeder
                 return $id['identifier'];
             }
         }
-        // Gera um ISBN fake único para não causar conflito no banco
         return 'fake-isbn-' . $index . '-' . uniqid();
     }
 }

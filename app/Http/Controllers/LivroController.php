@@ -80,9 +80,9 @@ class LivroController extends Controller
 
     public function store(Request $request)
     {
-        Log::info('Entrou no create');
+        //Log::info('Entrou no create');
         $this->authorize('create', Livro::class);
-        Log::info($request);
+        //Log::info($request);
         $validated = $request->validate([
             'titulo' => 'required|string',
             'bibliografia' => 'nullable|string',
@@ -98,7 +98,7 @@ class LivroController extends Controller
             'autores.*' => 'nullable|string',
             
         ]);
-        Log::info($validated);
+        //Log::info($validated);
 
         if ($request->filled('nova_editora')) {
             $editora = Editora::firstOrCreate(['nome' => $request->nova_editora]);
@@ -117,7 +117,7 @@ class LivroController extends Controller
             }
         }
 
-        Log::info($autor_ids);
+        //Log::info($autor_ids);
         $autor_ids = array_filter($autor_ids, fn($id) => !empty($id));
         if ($request->hasFile('capa')) {
             $caminhoCapa = $request->file('capa')->store('capas', 'public');
@@ -126,7 +126,7 @@ class LivroController extends Controller
         } else {
             $caminhoCapa = null;
         }
-        Log::info('Caminho capa: ' . $caminhoCapa);
+        //Log::info('Caminho capa: ' . $caminhoCapa);
 
         $dadosLivro = [
             'titulo' => $validated['titulo'],
@@ -141,11 +141,10 @@ class LivroController extends Controller
         $livro = Livro::create($dadosLivro);
 
         $livro->autores()->sync($autor_ids);
-        Log::info($livro);
+        //Log::info($livro);
 
         return redirect()->route('livros.index')->with('success', 'Livro criado com sucesso!');
     }
-
 
     public function show(Livro $livro)
     {
@@ -194,16 +193,33 @@ class LivroController extends Controller
             'bibliografia' => 'nullable|string',
             'preco' => 'required|numeric|min:0',
             'capa' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'capa_url' => 'nullable|string',
             'isbn' => 'required|digits_between:10,13|unique:livros,isbn,' . $livro->id,
             'status' => 'required|in:disponivel,indisponivel,requisitado', 
             'editora_id' => 'required|exists:editoras,id',
             'autores' => 'required|array|min:1',
-            'autores.*' => 'exists:autores,id'
+            'autores.*' => 'exists:autores,id',
+            'novos_autores' => 'nullable|array',
+            'novos_autores.*' => 'nullable|string',
         ]);
 
         if ($request->hasFile('capa')) {
-            $validated['capa'] = $request->file('capa')->store('capas', 'public');
+            $validated['capa_url'] = $request->file('capa')->store('capas', 'public');
+        } elseif ($request->filled('capa_url')) {
+            $validated['capa_url'] = $request->input('capa_url');
         }
+
+        $autor_ids = $validated['autores'] ?? [];
+
+        if ($request->filled('novos_autores')) {
+            foreach ($request->novos_autores as $novoAutor) {
+                if ($novoAutor) {
+                    $autor = Autor::firstOrCreate(['nome' => $novoAutor]);
+                    $autor_ids[] = $autor->id;
+                }
+            }
+        }
+        $autor_ids = array_filter($autor_ids, fn($id) => !empty($id));
 
         $livro->update($validated);
 
