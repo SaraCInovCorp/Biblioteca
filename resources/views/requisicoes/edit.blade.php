@@ -2,14 +2,17 @@
     use Carbon\Carbon;
     $isAdmin = auth()->user()->role === 'admin';
 @endphp
-
-<x-layout>
-    <main>
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ __('Requisição') }} {{ $bookRequest->id }}
+        </h2>
+    </x-slot>
+    <div class="flex-1 ">
         <form action="{{ route('requisicoes.update', $bookRequest) }}" method="POST">
             @csrf
             @method('PUT')
-            <div class="border rounded p-4">
-                <p class="font-bold mb-2">Requisição {{ $bookRequest->id }}</p>
+            <div class="p-4">
                 <div class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-6 p-4">
                     <div>
                         <div class="mb-4">
@@ -44,7 +47,7 @@
                         </div>
                     </div>
                 
-                    <div class="mb-6 p-4 bg-gray-100 rounded shadow flex items-center gap-4">
+                    <div class="mb-6 p-4 bg-white rounded shadow flex items-center gap-4">
                         @if($bookRequest->user->profile_photo_path)
                             <img src="{{ Str::startsWith($bookRequest->user->profile_photo_path, ['http://', 'https://']) ? $bookRequest->user->profile_photo_path : asset('storage/' . $bookRequest->user->profile_photo_path) }}"
                                 alt="Foto de perfil de {{ $bookRequest->user->name }}"
@@ -64,7 +67,7 @@
                 <h3 class="font-semibold mt-4 mb-2">Itens da Requisição</h3>
                 @foreach ($bookRequest->items as $i => $item)
                     <input type="hidden" name="items[{{ $i }}][id]" value="{{ $item->id }}">
-                    <div class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-6 p-4 shadow bg-gray-100">
+                    <div class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-6 p-4">
                             <div class="mb-4 p-5">
                                 <label class="block text-sm font-medium mb-1">Livro</label>
                                 <select name="items[{{ $i }}][livro_id]" class="w-full border rounded px-2 py-1"
@@ -169,9 +172,6 @@
             @endforeach
         });
     </script>
-
-    </main>
-    
-
-</x-layout>
+    </div>
+</x-app-layout>
 

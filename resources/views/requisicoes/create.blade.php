@@ -1,7 +1,11 @@
-<x-layout>
-    <main class="max-w-4xl mx-auto p-6" x-data="bookRequestForm()" x-init="init()">
-
-        <h1 class="text-2xl font-bold mb-6">Faça sua requisição</h1>
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ __('Faça sua requisição') }}
+        </h2>
+    </x-slot>
+    <div class="flex-1 ">
+    <div class="max-w-4xl mx-auto p-6" x-data="bookRequestForm()" x-init="init()">
 
         <form action="{{ route('requisicoes.store') }}" method="POST">
             @csrf
@@ -95,7 +99,8 @@
             @endif
         </form>
 
-    </main>
+</div>
+</div>
 
     <script>
         function bookRequestForm() {
@@ -277,4 +282,4 @@
             }
         }
     </script>
-</x-layout>
+</x-app-layout>

@@ -17,10 +17,8 @@
         <!-- Styles -->
         @livewireStyles
     </head>
-    <body class="font-sans antialiased">
-        <x-banner />
-
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <body  class="bg-[#CECECE] text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col">
+        <div class="min-h-screen bg-gray-100 dark:bg-gray-900 w-[98%] shadow-[inset_0px_-1px_0px_0px_rgba(26,26,0,0.16)]">
             @livewire('navigation-menu')
 
             <!-- Page Heading -->
@@ -33,7 +31,7 @@
             @endif
 
             <!-- Page Content -->
-            <main>
+            <main class="flex w-full max-w-full text-[13px] leading-[20px] flex-1 p-6 pb-12 lg:p-20 ">
                 {{ $slot }}
             </main>
         </div>

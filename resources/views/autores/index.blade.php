@@ -1,12 +1,16 @@
 @php
     use Illuminate\Support\Str;
 @endphp
-<x-layout>
-    <main>
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ __('Lista de Autores') }}
+        </h2>
+    </x-slot>
+    <div class="flex-1 ">
         <div class="py-4 w-full flex justify-between items-center">
             <div>
-                <p class="mr-auto font-bold text-lg">Autores</p>
-                <p>Total de Autores: {{ $autores->total() }}</p>
+                <p><b>Total de Autores:</b> {{ $autores->total() }}</p>
             </div>
             <div>
                 @if(auth()->check() && auth()->user()->isAdmin())
@@ -55,5 +59,5 @@
                 {{ $autores->links() }}
             </div>
         @endif
-    </main>
-</x-layout>
+    </div>
+</x-app-layout>

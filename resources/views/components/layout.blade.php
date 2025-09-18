@@ -21,10 +21,11 @@
         @endif
     </head>
     <body class="bg-[#CECECE] text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col">
-        <x-header />
-        <div class="flex justify-center w-full lg:w-[90%] transition-opacity opacity-100 duration-750 lg:grow starting:opacity-0 mt-4">
+        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+            @livewire('navigation-menu')
+        <div class="flex justify-center w-full lg:w-[90%] transition-opacity opacity-100 duration-750 lg:grow starting:opacity-0">
             <main class="flex w-full max-w-full flex-col-reverse lg:flex-row lg:max-w-[90vw]">
-                <div class="text-[13px] leading-[20px] flex-1 p-6 pb-12 lg:p-20 bg-[#FCFCFC] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] rounded-bl-lg rounded-br-lg lg:rounded-tl-lg lg:rounded-br-none">
+                <div class="text-[13px] leading-[20px] flex-1 p-6 pb-12 lg:p-20 bg-gray-100 shadow-[inset_0px_-1px_0px_0px_rgba(26,26,0,0.16)] rounded-bl-lg rounded-br-lg lg:rounded-tl-lg lg:rounded-br-none">
                     {{ $slot }}
                 </div>
             </main>

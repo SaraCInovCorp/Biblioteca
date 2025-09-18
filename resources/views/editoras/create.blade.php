@@ -1,10 +1,12 @@
-<x-layout>
-    <main>
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ __('Nova Editora') }}
+        </h2>
+    </x-slot>
+    <div class="flex-1 ">
         <form method="POST" action="{{ route('editoras.store') }}" enctype="multipart/form-data">
                 @csrf
-            <div class="py-4 w-full">
-                <p class="mr-auto font-bold text-lg">Nova Editora</p>
-            </div>
             <div class="p-4 rounded border shadow-sm bg-white">
                 
                     <div class="flex flex-col-2 space-x-4">
@@ -26,5 +28,5 @@
                 <x-button type="submit" class="mt-4  py-2 px-4 ">Salvar Editora</x-button>
             </div>
         </form>
-    </main>
-</x-layout>
+    </div>
+</x-app-layout>

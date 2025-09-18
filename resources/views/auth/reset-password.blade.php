@@ -1,5 +1,5 @@
 <x-guest-layout>
-    <x-header/>
+    <div class="flex-1 ">
     <x-authentication-card>
         <x-slot name="logo">
             <x-authentication-card-logo size="16" />

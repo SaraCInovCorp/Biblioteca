@@ -1,12 +1,14 @@
-<x-layout>
-    <main>
-        <h2 class="text-xl font-bold mb-4">
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
             @if($user)
-                Perfil de {{ $user->name }}
+                {{ __('Perfil de') }} {{ $user->name }}
             @else
-                Histórico de Usuários
+                {{ __('Histórico de Usuários') }}
             @endif
         </h2>
+    </x-slot>
+    <div class="flex-1 ">
 
         @if($isAdmin)
             {{-- Formulário de busca --}}
@@ -65,5 +67,5 @@
         @elseif($user && (!$isAdmin || ($isAdmin && $searchTerm !== '')))
             <p class="text-gray-600 italic">Nenhuma requisição encontrada para este usuário.</p>
         @endif
-    </main>
-</x-layout>
+    </div>
+</x-app-layout>

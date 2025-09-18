@@ -1,7 +1,12 @@
-<x-layout>
-    <main class="px-4 py-8">
-        <h1 class="text-3xl font-bold mb-6">Importar Livros da API Google Books</h1>
-
+<x-app-layout>
+    <x-slot name="header">
+        <div class="flex justify-start w-full">
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+                {{ __('Importar Livros da API Google Books') }}
+            </h2>
+        </div>
+    </x-slot>
+    <div class="flex-1 ">
         @if(session('warning_import'))
         <div class="mb-6 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded">
             <strong class="font-bold">Alguns livros não foram importados:</strong>
@@ -40,7 +45,7 @@
 
         <!-- Mensagem de erro genérica -->
         <div id="error-message" class="text-red-600 mt-4 hidden"></div>
-    </main>
+</div>
 
     <script>
         const btnSearch = document.getElementById('btn-search');
@@ -167,4 +172,4 @@
             }
         });
     </script>
-</x-layout>
+</x-app-layout>

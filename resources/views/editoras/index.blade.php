@@ -1,12 +1,16 @@
 @php
     use Illuminate\Support\Str;
 @endphp
-<x-layout>
-    <main>
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ __('Editoras') }} 
+        </h2>
+    </x-slot>
+    <div class="flex-1 ">
         <div class="py-4 w-full flex justify-between items-center">
             <div>
-                <p class="mr-auto font-bold text-lg">Editoras</p>
-                <p>Total de editoras: {{ $editoras->total() }}</p>
+                <p><b>Total de editoras: </b>{{ $editoras->total() }}</p>
             </div>
             <div>
                 @if(auth()->check() && auth()->user()->isAdmin())
@@ -54,5 +58,5 @@
                 {{ $editoras->links() }}
             </div>
         @endif
-    </main>
-</x-layout>
+    </div>
+</x-app-layout>

@@ -1,9 +1,13 @@
-<x-layout>
-    <main class="flex-grow">
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ __('Lista de Livros') }}
+        </h2>
+    </x-slot>
+    <div class="flex-1 ">
         <div class="py-4 w-full flex justify-between items-center">
             <div>
-                <p class="mr-auto font-bold text-lg">Livros</p>
-                <p>Total de livros: {{ $livros->total() }}</p>
+                <p><b>Total de livros:</b> {{ $livros->total() }}</p>
             </div>
             <div>
                 @if(auth()->check() && auth()->user()->isAdmin())
@@ -11,20 +15,19 @@
                 @endif
             </div>
         </div>
-        <form method="GET" action="{{ route('livros.index') }}" class="mb-6 flex gap-4 flex-wrap items-end">
-    <div>
+        <form method="GET" action="{{ route('livros.index') }}" class="mb-6 grid gap-4 grid-cols-1 md:grid-cols-[2fr_1fr_1fr]">
+    <div class="col-span-1">
         <x-label for="query">Buscar título</x-label>
-        <x-input type="text" name="query" id="query" value="{{ request('query') }}" />
+        <x-input type="text" name="query" id="query" value="{{ request('query') }}" class="w-full" />
     </div>
 
-    <div>
+    <div class="md:col-span-1">
         <x-label for="editora">Editora</x-label>
         @php
             $editorasOptions = $editoras->pluck('nome', 'id')->toArray();
         @endphp
 
         <x-select 
-            
             name="editora" 
             id="editora" 
             :options="$editorasOptions" 
@@ -34,7 +37,7 @@
         
     </div>
 
-    <div>
+    <div class="md:col-span-1">
         <x-label for="autor">Autor</x-label>
 
         @php
@@ -50,11 +53,12 @@
         />
 
     </div>
-
-    <x-button type="submit">Filtrar</x-button>
-    <x-secondary-button as="a" href="{{ route('livros.index') }}" class="ml-2 px-4 py-2 border rounded text-gray-700 hover:bg-gray-200">
-        Limpar filtros
-    </x-secondary-button>
+    <div class="md:col-span-2 flex gap-2">
+        <x-button type="submit">Filtrar</x-button>
+        <x-secondary-button as="a" href="{{ route('livros.index') }}" class="ml-2 px-4 py-2 border rounded text-gray-700 hover:bg-gray-200">
+            Limpar filtros
+        </x-secondary-button>
+    </div>
 </form>
         
         @if ($livros->isEmpty())
@@ -78,5 +82,5 @@
                 {{ $livros->links() }}
             </div>
         @endif
-    </main>
-</x-layout>
+    </div>
+</x-app-layout>

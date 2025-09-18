@@ -17,10 +17,22 @@
         <!-- Styles -->
         @livewireStyles
     </head>
-    <body>
-        <div class="font-sans text-gray-900 dark:text-gray-100 antialiased">
+    <body  class="bg-[#CECECE] text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col">
+        <div class="min-h-screen bg-gray-100 dark:bg-gray-900 w-[98%] shadow-[inset_0px_-1px_0px_0px_rgba(26,26,0,0.16)]">
+            @livewire('navigation-menu')
+
+            <!-- Page Heading -->
+            @if (isset($header))
+                <header class="bg-white dark:bg-gray-800 shadow">
+                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                        {{ $header }}
+                    </div>
+                </header>
+            @endif
+
+        <main class="flex w-full max-w-full text-[13px] leading-[20px] flex-1 p-6 pb-12 lg:p-20 ">
             {{ $slot }}
-        </div>
+        </main>
 
         @livewireScripts
     </body>

@@ -16,11 +16,11 @@
                 <div class="text-sm mt-4 text-justify text-gray-700">
                     {{ Str::limit($livro->bibliografia, 150, '...') }}
                 </div>
-                <span class="text-sm font-semibold mb-2 block">
-                    {{ $livro->editora->nome ?? 'Editora não informada' }}
+                <span class="text-sm mb-2 block">
+                    <span class="font-semibold">Editora: </span>{{ $livro->editora->nome ?? 'Editora não informada' }}
                 </span>
                 <p class="text-sm mt-3">
-                    {{ $livro->autores->pluck('nome')->join(', ') ?? 'Autor não informado' }}
+                    <span class="font-semibold">Autor: </span>{{ $livro->autores->pluck('nome')->join(', ') ?? 'Autor não informado' }}
                 </p>
                 <span class="text-sm font-semibold block mt-2">
                     Status: 

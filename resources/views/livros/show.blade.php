@@ -2,8 +2,13 @@
     use Illuminate\Support\Str;
     use Carbon\Carbon;
 @endphp
-<x-layout>
-    <main>
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ __('Detalhe do ') }} {{ $livro->titulo }}
+        </h2>
+    </x-slot>
+    <div class="flex-1 ">
         <div class="flex flex-row items-start justify-center gap-6 mt-6 max-w-5xl mx-auto">
             <div class="flex-shrink-0">
                 <img src="{{ Str::startsWith($livro->capa_url, ['http://','https://']) ? $livro->capa_url : asset('storage/'.$livro->capa_url) }}" 
@@ -109,5 +114,5 @@
         }
 
         </script>
-    </main>
-</x-layout>
+    </div>
+</x-app-layout>

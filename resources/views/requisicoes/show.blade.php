@@ -7,10 +7,13 @@
     $isAdmin = auth()->user()->role === 'admin';
     
 @endphp
-
-<x-layout>
-    <main>
-        <div>
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ __('Requisição') }} {{ $bookRequest->id }}
+        </h2>
+    </x-slot>
+    <div class="flex-1 ">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 p-4">
             {{-- Coluna 1: Dados do Usuário --}}
             @if($isAdmin)
@@ -43,7 +46,6 @@
             {{-- Coluna 2: Dados da Requisição --}}
             <div>
                 <div class="border rounded p-4 h-full bg-white shadow">
-                    <p class="font-bold mb-4">Requisição {{ $bookRequest->id }} - {{ Carbon::parse($bookRequest->data_inicio)->format('d/m/Y') }}</p>
                     <p><b>Data da Requisição:</b> {{ Carbon::parse($bookRequest->data_inicio)->format('d/m/Y') }}</p>
                     <p><b>Data Prevista da Entrega:</b> {{ Carbon::parse($bookRequest->data_fim)->format('d/m/Y') }}</p>
                     @if($bookRequest->ativo)

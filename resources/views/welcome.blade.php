@@ -1,5 +1,5 @@
-<x-layout>
-    <main class="flex-grow">
+<x-app-layout>
+    <div class="flex-grow">
         <form method="GET" action="{{ route('welcome') }}" class="mb-6">
             <x-label for="search">Pesquise seu livro, autor ou editora:</x-label>
             <x-input type="text" name="query" id="search" value="{{ $query }}" class="w-full" placeholder="Digite para pesquisar..."/>
@@ -34,5 +34,5 @@
             </div>
         @endif
 
-    </main>
-</x-layout>
+</div>
+</x-app-layout>

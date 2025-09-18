@@ -2,10 +2,14 @@
     use Carbon\Carbon;
 @endphp
 
-<x-layout>
-    <main>
-        <div class="flex items-center mb-4">
-            <h1 class="mr-auto font-bold text-lg">Requisições</h1>
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ __('Lista de Requisições') }}
+        </h2>
+    </x-slot>
+    <div class="flex-1 ">
+        <div class="flex items-center mb-4 justify-end">
             @if(!empty($filtro) || request()->filled('search') || request()->filled('status') || request()->filled('data_inicio') || request()->filled('data_fim') || request()->filled('user_id'))
                 <x-secondary-button 
                     type="button" 
@@ -148,7 +152,7 @@
         
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 @foreach($bookRequests as $request)
-                    <div class="border rounded p-3 shadow">
+                    <div class="border rounded p-3 shadow bg-white">
                         <p class="font-bold text-sm my-2">
                             Requisição {{ $request->id }} - {{ Carbon::parse($request->data_inicio)->format('d/m/Y') }}
                         </p>
@@ -186,7 +190,7 @@
                 @if($ativas->isNotEmpty())
                     <h2 class="font-bold text-sm my-4">Requisições Ativas</h2>
                     @foreach($ativas as $request)
-                        <div class="mb-4 border rounded p-3">
+                        <div class="mb-4 border rounded p-3 bg-white">
                             <p class="font-semibold"><a href="{{ route('requisicoes.show', $request) }}" class="text-blue-800 hover:underline">Requisição {{ $request->id }}</a></p>
                             <div class="pt-4 flex justify-between">
                                 <div>
@@ -213,7 +217,7 @@
                     <h2 class="font-bold mt-8 pb-4">Requisições Passadas</h2>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         @foreach($passadas as $request)
-                            <div class="border rounded p-3 shadow">
+                            <div class="border rounded p-3 bg-white shadow">
                                 <p class="font-bold text-sm my-2">Requisição {{ $request->id }} - {{ Carbon::parse($request->data_inicio)->format('d/m/Y') }}</p>
                                 <p class="mb-4 font-semibold {{ $request->ativo ? 'text-green-600' : 'text-red-600' }}">
                                     Status da Requisição: {{ $request->ativo ? 'Ativa' : 'Inativa' }}

@@ -1,14 +1,16 @@
 <script>
     const availableAutores = @json($autores);
 </script>
-<x-layout>
-    <main>
-        <div>
-            <form method="POST" action="{{ route('livros.update', $livro->id) }}" enctype="multipart/form-data" class="mx-auto bg-white p-6 rounded-lg shadow-md">
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ __('Editar ') }} {{ $livro->titulo }}
+        </h2>
+    </x-slot>
+    <div class="flex-1 ">
+            <form method="POST" action="{{ route('livros.update', $livro->id) }}" enctype="multipart/form-data" class="mx-auto p-6">
                 @csrf
                 @method('PUT')
-                <h2 class="text-2xl font-bold mb-6 text-center">Editar {{ $livro->titulo }}</h2>
-
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="mb-8">
                         <x-button type="button" id="btn-google-edit">Buscar dados na API Google Books</x-button>
@@ -282,5 +284,5 @@
             }
         });
     </script>
-    </main>
-</x-layout>
+    </div>
+</x-app-layout>
