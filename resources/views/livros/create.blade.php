@@ -181,6 +181,7 @@
 
                     data.items.forEach(item => {
                         const livro = item.volumeInfo;
+                        const saleInfo = item.saleInfo;
                         const foto = livro.imageLinks?.thumbnail || 'https://via.placeholder.com/128x195?text=No+Image';
 
                         const divLivro = document.createElement('div');
@@ -192,7 +193,7 @@
                         `;
 
                         divLivro.addEventListener('click', async () => {
-                            await preencheCamposComLivroGoogle(livro);
+                            await preencheCamposComLivroGoogle(livro, saleInfo);
                             resultadosDiv.classList.add('hidden');
                         });
 
@@ -228,12 +229,12 @@
             return data || [];
         }
 
-        async function preencheCamposComLivroGoogle(livro) {
+        async function preencheCamposComLivroGoogle(livro, saleInfo) {
             
             document.getElementById('titulo').value = livro.title || '';
             document.getElementById('bibliografia').value = livro.description || '';
             document.getElementById('isbn').value = (livro.industryIdentifiers?.find(id => id.type.includes('ISBN'))?.identifier) || '';
-            const preco = livro.saleInfo?.listPrice?.amount || '';
+            const preco = saleInfo?.listPrice?.amount || '';
             const precoInput = document.getElementById('preco');
             precoInput.value = preco;
             precoInput.dispatchEvent(new Event('input', { bubbles: true }));

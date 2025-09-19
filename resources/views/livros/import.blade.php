@@ -30,12 +30,20 @@
             <x-input type="text" id="search-query" placeholder="Digite título, autor, editora, ISBN ou tema" 
                    class="flex-grow " />
             <x-button id="btn-search">Buscar</x-button>
+            <x-secondary-button type="button" id="btn-limpar-pesquisa">Limpar</x-secondary-button>
         </div>
 
         <!-- Container de resultados -->
         <form id="import-form" method="POST" action="{{ route('livros.import.store') }}">
             @csrf
             <div id="results-container" class="gap-4 mb-6 hidden"></div>
+
+            <!-- Botão "Buscar Mais" para paginação, logo abaixo dos resultados -->
+            <div class="text-center mb-6">
+                <x-button id="btn-buscar-mais" type="button" style="display:none;">
+                    Buscar Mais
+                </x-button>
+            </div>
 
             <!-- Botão para importar selecionados -->
             <div class="text-center" id="import-actions" style="display:none;">
@@ -53,7 +61,12 @@
         const resultsContainer = document.getElementById('results-container');
         const importActions = document.getElementById('import-actions');
         const errorMessage = document.getElementById('error-message');
-        const importForm = document.getElementById('import-form');
+        const btnBuscarMais = document.getElementById('btn-buscar-mais');
+        const btnLimparPesquisa = document.getElementById('btn-limpar-pesquisa');
+
+        let currentStartIndex = 0;
+        const maxResultsPerPage = 40;
+        let totalItems = 0;
 
         function clearResults() {
             resultsContainer.innerHTML = '';
@@ -64,12 +77,24 @@
             errorMessage.textContent = '';
         }
 
-        function createBookDiv(book, index) {
+        btnLimparPesquisa.addEventListener('click', () => {
+            queryInput.value = '';
+            clearResults();
+            errorMessage.classList.add('hidden');
+            errorMessage.textContent = '';
+            btnBuscarMais.style.display = 'none';
+            importActions.style.display = 'none';
+        });
+
+        function criarDivLivro(book, index) {
             const volume = book.volumeInfo || {};
             const title = volume.title || 'Sem título';
             const authors = volume.authors ? volume.authors.join(', ') : 'Autor(s) desconhecido(s)';
             const publisher = volume.publisher || 'Editora desconhecida';
             const thumbnail = volume.imageLinks?.thumbnail || 'https://via.placeholder.com/128x195?text=Sem+Imagem';
+            const saleInfo = book.saleInfo || {};
+            const listPrice = saleInfo.listPrice || {};
+            const preco = listPrice.amount || null;
 
             const div = document.createElement('div');
             div.className = 'border rounded shadow p-3 flex flex-col items-center gap-2';
@@ -78,17 +103,18 @@
             checkbox.type = 'checkbox';
             checkbox.name = 'livros[]';
             checkbox.className = 'mb-4';
+            checkbox.id = `book-checkbox-${index}`;
 
             checkbox.value = JSON.stringify({
-                title: title,
+                title,
                 authors: volume.authors || [],
-                publisher: publisher,
+                publisher,
                 description: volume.description || '',
                 isbn: (volume.industryIdentifiers?.find(id => id.type.includes('ISBN'))?.identifier) || '',
-                thumbnail: thumbnail,
+                thumbnail,
+                preco,
                 industryIdentifiers: volume.industryIdentifiers || []
             });
-            checkbox.id = `book-checkbox-${index}`;
 
             const label = document.createElement('label');
             label.htmlFor = checkbox.id;
@@ -122,54 +148,82 @@
             return div;
         }
 
-        async function searchBooks() {
-            clearResults();
-            const q = queryInput.value.trim();
-            if (!q) {
+        async function buscarLivros(paginaNova = false) {
+            const query = queryInput.value.trim();
+            if (!query) {
                 errorMessage.textContent = 'Digite um termo para pesquisa.';
                 errorMessage.classList.remove('hidden');
                 return;
             }
+            errorMessage.classList.add('hidden');
+
+            if (paginaNova) {
+                currentStartIndex += maxResultsPerPage; // Próxima página
+            } else {
+                currentStartIndex = 0;  // Nova busca começa do zero
+                clearResults();
+            }
+
             try {
                 const url = new URL("{{ route('livros.import.search') }}");
-                url.searchParams.append('q', q);
+                url.searchParams.set('q', query);
+                url.searchParams.set('startIndex', currentStartIndex);
+
                 const response = await fetch(url.toString());
                 const data = await response.json();
 
                 if (data.error) {
                     errorMessage.textContent = data.error;
                     errorMessage.classList.remove('hidden');
+                    btnBuscarMais.style.display = 'none';
                     return;
                 }
 
                 if (data.totalItems === 0 || !data.items) {
-                    errorMessage.textContent = 'Nenhum livro encontrado para a pesquisa.';
-                    errorMessage.classList.remove('hidden');
+                    if (currentStartIndex === 0) {
+                        errorMessage.textContent = 'Nenhum livro encontrado para a pesquisa.';
+                        errorMessage.classList.remove('hidden');
+                    }
+                    btnBuscarMais.style.display = 'none';
                     return;
                 }
 
-                data.items.forEach((book, index) => {
-                    const div = createBookDiv(book, index);
-                    resultsContainer.appendChild(div);
-                });
+                totalItems = data.totalItems;
 
                 resultsContainer.classList.remove('hidden');
                 resultsContainer.classList.add('grid', 'grid-cols-1', 'md:grid-cols-3', 'lg:grid-cols-4');
+
+                data.items.forEach((book, index) => {
+                    const div = criarDivLivro(book, index);
+                    resultsContainer.appendChild(div);
+                });
+
                 importActions.style.display = 'block';
+
+                if (currentStartIndex + maxResultsPerPage < totalItems) {
+                    btnBuscarMais.style.display = 'block';
+                } else {
+                    btnBuscarMais.style.display = 'none';
+                }
+
             } catch (err) {
                 errorMessage.textContent = 'Erro ao realizar a busca.';
                 errorMessage.classList.remove('hidden');
+                btnBuscarMais.style.display = 'none';
                 console.error(err);
             }
         }
 
-        btnSearch.addEventListener('click', searchBooks);
+        // Eventos
+        btnSearch.addEventListener('click', () => buscarLivros(false));
+        btnBuscarMais.addEventListener('click', () => buscarLivros(true));
 
         queryInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                searchBooks();
+                buscarLivros(false);
             }
         });
+
     </script>
 </x-app-layout>

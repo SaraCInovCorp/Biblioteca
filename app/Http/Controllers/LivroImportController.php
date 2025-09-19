@@ -26,9 +26,15 @@ class LivroImportController extends Controller
             return response()->json(['error' => 'Parâmetro de busca obrigatório'], 400);
         }
 
+        $startIndex = (int) $request->query('startIndex', 0);
+
         $response = Http::get('https://www.googleapis.com/books/v1/volumes', [
             'q' => $query,
-            'maxResults' => 20,
+            'maxResults' => 40,
+            'orderBy' => 'relevance',    
+            'langRestrict' => 'pt', 
+            'printType' => 'books', 
+            'startIndex' => $startIndex,
         ]);
 
         if ($response->failed()) {
@@ -78,7 +84,7 @@ class LivroImportController extends Controller
                 'isbn' => $isbn,
                 'titulo' => $item['title'] ?? 'Sem título',
                 'bibliografia' => $item['description'] ?? null,
-                'preco' => rand(10, 200),
+                'preco' => $item['preco'] ?? rand(10, 200),
                 'capa_url' => $item['thumbnail'] ?? null,
                 'status' => 'disponivel',
                 'editora_id' => $editora?->id,
