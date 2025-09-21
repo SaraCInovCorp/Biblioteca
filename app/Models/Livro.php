@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Editora;
 use App\Models\Autor;
+use App\Models\Importacao;
 
 class Livro extends Model
 {
@@ -23,6 +24,8 @@ class Livro extends Model
         'capa_url',
         'preco',
         'status',
+        'origem',
+        'user_id',
     ];
 
     public function editora(): BelongsTo
@@ -32,7 +35,7 @@ class Livro extends Model
 
     public function autores(): BelongsToMany
     {
-        return $this->belongsToMany(Autor::class);
+        return $this->belongsToMany(Autor::class, 'autor_livro')->withTimestamps();
     }
 
     public function bookRequestItems(): HasMany
@@ -43,6 +46,11 @@ class Livro extends Model
     public function requisicoes()
     {
         return $this->hasManyThrough(BookRequest::class, BookRequestItem::class, 'livro_id', 'id', 'id', 'book_request_id');
+    }
+
+    public function importacoes()
+    {
+        return $this->belongsToMany(Importacao::class, 'livro_importacao')->withTimestamps();
     }
 
 }

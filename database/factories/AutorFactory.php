@@ -11,6 +11,7 @@ use App\Models\Autor_Livro;
  */
 class AutorFactory extends Factory
 {
+    protected $model = Autor::class;
     /**
      * Define the model's default state.
      *
@@ -21,6 +22,8 @@ class AutorFactory extends Factory
         return [
             'nome' => $this->faker->name(),
             'foto_url' => 'https://picsum.photos/150/200?image=' . $this->faker->numberBetween(1, 1000),
+            'origem' => 'seeder',
+            'user_id' => 1,
         ];
     }
 }

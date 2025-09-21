@@ -10,6 +10,7 @@ use App\Models\Autor;
 use App\Models\User;
 use App\Models\BookRequest;
 use App\Models\BookRequestItem;
+use App\Models\Importacao;
 
 class RelacionamentoTest extends TestCase
 {
@@ -17,6 +18,7 @@ class RelacionamentoTest extends TestCase
 
     public function test_livro_belongs_to_editora_and_has_authors()
     {
+        $user = User::factory()->create(); 
         $editora = Editora::factory()->create();
         $autores = Autor::factory()->count(3)->create();
         $livro = Livro::factory()->for($editora)->create();
@@ -28,6 +30,34 @@ class RelacionamentoTest extends TestCase
         $this->assertCount(3, $livro->autores);
         foreach ($autores as $autor) {
             $this->assertTrue($livro->autores->contains($autor));
+        }
+    }
+
+    public function test_importacao_has_livro_editora_autores()
+    {
+        $user = User::factory()->create();
+        $editora = Editora::factory()->create();
+        $autores = Autor::factory()->count(2)->create();
+        $livro = Livro::factory()->for($editora)->create();
+
+        $importacao = Importacao::create([
+            'user_id' => $user->id,
+            'api' => 'seeder',
+            'imported_at' => now(),
+        ]);
+
+        $importacao->livros()->attach($livro->id);
+        $importacao->editoras()->attach($editora->id);
+        $importacao->autores()->sync($autores->pluck('id'));
+
+        $importacao->refresh();
+
+        $this->assertTrue($importacao->livros->contains($livro));
+        $this->assertTrue($importacao->editoras->contains($editora));
+        $this->assertEquals($user->id, $importacao->user->id);
+        $this->assertCount(2, $importacao->autores);
+        foreach ($autores as $autor) {
+            $this->assertTrue($importacao->autores->contains($autor));
         }
     }
 

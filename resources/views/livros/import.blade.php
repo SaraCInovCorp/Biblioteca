@@ -7,21 +7,32 @@
         </div>
     </x-slot>
     <div class="flex-1 ">
-        @if(session('warning_import'))
-        <div class="mb-6 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded">
-            <strong class="font-bold">Alguns livros não foram importados:</strong>
-            <ul class="list-disc list-inside mt-2">
-                @foreach(session('warning_import') as $item)
-                    <li><strong>{{ $item['titulo'] }}</strong>: {{ $item['motivo'] }}</li>
-                @endforeach
-            </ul>
-            <p class="mt-2">Você pode importar esses livros manualmente pelo formulário de cadastro.</p>
-        </div>
+       @if(session('warning_import'))
+            <div class="mb-6 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded">
+                <strong class="font-bold">Alguns livros não foram importados:</strong>
+                <ul class="list-disc list-inside mt-2">
+                    @foreach(session('warning_import') as $item)
+                        <li><strong>{{ $item['titulo'] }}</strong>: {{ $item['motivo'] }}</li>
+                    @endforeach
+                </ul>
+                <p class="mt-2">Você pode importar esses livros manualmente pelo formulário de cadastro.</p>
+                <div class="mt-2">
+                    <a href="{{ route('livros.importados.list') }}" class="text-blue-600 underline">
+                        Ver livros importados e exportar
+                    </a>
+                </div>
+            </div>
         @endif
+        
 
         @if(session('success'))
         <div class="mb-6 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded">
             {{ session('success') }}
+            <div class="mt-2">
+                <a href="{{ route('livros.importados.list') }}" class="text-blue-600 underline">
+                    Ver livros importados e exportar
+                </a>
+            </div>
         </div>
         @endif
 
@@ -38,7 +49,7 @@
             @csrf
             <div id="results-container" class="gap-4 mb-6 hidden"></div>
 
-            <!-- Botão "Buscar Mais" para paginação, logo abaixo dos resultados -->
+            <!-- Botão "Buscar Mais" para paginação -->
             <div class="text-center mb-6">
                 <x-button id="btn-buscar-mais" type="button" style="display:none;">
                     Buscar Mais
@@ -53,7 +64,7 @@
 
         <!-- Mensagem de erro genérica -->
         <div id="error-message" class="text-red-600 mt-4 hidden"></div>
-</div>
+    </div>
 
     <script>
         const btnSearch = document.getElementById('btn-search');

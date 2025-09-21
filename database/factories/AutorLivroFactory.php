@@ -12,6 +12,7 @@ use App\Models\Livro;
  */
 class AutorLivroFactory extends Factory
 {
+    protected $model = Autor_Livro::class;
     /**
      * Define the model's default state.
      *

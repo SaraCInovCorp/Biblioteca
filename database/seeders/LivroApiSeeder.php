@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Http;
 use App\Models\Livro;
 use App\Models\Editora;
 use App\Models\Autor;
+use App\Models\Importacao;
+use App\Models\LivroImportacao;
+use App\Models\AutorImportacao;
+use App\Models\EditoraImportacao;
 
 class LivroApiSeeder extends Seeder
 {
@@ -16,6 +20,12 @@ class LivroApiSeeder extends Seeder
      */
     public function run(): void
     {
+         $importacao = Importacao::create([
+            'user_id' => 1,
+            'api' => 'google_books',
+            'imported_at' => now(),
+        ]);
+
         // Lê o termo de busca para a API no .env, ou usa 'programming' como padrão
         $q = env('BOOK_API_QUERY', 'programming');
 
@@ -41,11 +51,21 @@ class LivroApiSeeder extends Seeder
 
                 $editora = Editora::firstOrCreate(
                     ['nome' => $volumeInfo['publisher']],
-                    ['logo_url' => 'https://picsum.photos/150/200?image=' . rand(1, 1000)]
+                    [
+                        'logo_url' => 'https://picsum.photos/150/200?image=' . rand(1, 1000),
+                        'origem' => 'import_google_books',
+                        'user_id' => 1, 
+                    ]
                 );
+
+                EditoraImportacao::firstOrCreate([
+                    'importacao_id' => $importacao->id,
+                    'editora_id' => $editora->id,
+                ]);
 
                 $isbn = $this->extractIsbn($volumeInfo['industryIdentifiers'] ?? [], $index);
                 $preco = $item['saleInfo']['listPrice']['amount'] ?? rand(10, 200);
+                
                 $livro = Livro::create([
                     'titulo' => $volumeInfo['title'] ?? 'Sem título',
                     'isbn' => $isbn,
@@ -54,15 +74,31 @@ class LivroApiSeeder extends Seeder
                     'preco' => $preco,
                     'status' => 'disponivel',
                     'editora_id' => $editora?->id,
+                    'origem' => 'import_google_books',
+                    'user_id' => 1, 
+                ]);
+
+                LivroImportacao::create([
+                    'importacao_id' => $importacao->id,
+                    'livro_id' => $livro->id,
                 ]);
 
                 $autor_ids = [];
                 foreach ($volumeInfo['authors'] as $nomeAutor) {
                     $autor = Autor::firstOrCreate(
                         ['nome' => $nomeAutor],
-                        ['foto_url' => 'https://picsum.photos/150/200?image=' . rand(1, 1000)]
+                        [
+                            'foto_url' => 'https://picsum.photos/150/200?image=' . rand(1, 1000),
+                            'origem' => 'import_google_books',
+                            'user_id' => 1,  // Ajuste conforme usuário atual
+                        ]
                     );
                     $autor_ids[] = $autor->id;
+
+                    AutorImportacao::firstOrCreate([
+                        'importacao_id' => $importacao->id,
+                        'autor_id' => $autor->id,
+                    ]);
                 }
                 $livro->autores()->sync($autor_ids);
             }

@@ -13,6 +13,7 @@ use App\Models\Autor_Livro;
  */
 class LivroFactory extends Factory
 {
+    protected $model = Livro::class;
     /**
      * Define the model's default state.
      *
@@ -27,7 +28,9 @@ class LivroFactory extends Factory
             'bibliografia' => $this->faker->paragraph(),
             'capa_url' => 'https://picsum.photos/150/200?image=' . $this->faker->numberBetween(1, 1000),
             'preco' => $this->faker->randomFloat(2, 10, 200),
-            'status' => $this->faker->randomElement(['disponivel', 'indisponivel', 'requisitado']), 
+            'status' => $this->faker->randomElement(['disponivel', 'indisponivel', 'requisitado']),
+            'origem' => 'seeder',
+            'user_id' => 1,
         ];
     }
 

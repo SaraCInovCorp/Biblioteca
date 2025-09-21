@@ -45,7 +45,17 @@ class LivroController extends Controller
 
     public function exportExcel(Request $request)
     {
+        $ids = $request->query('ids', []);
+        if (is_string($ids)) {
+            $ids = json_decode($ids, true) ?: explode(',', $ids);
+        }
+        $ids = (array) $ids;
+
         $fileName = 'livros_' . now()->format('Ymd_His') . '.xlsx';
+
+        if (!empty($ids)) {
+            return (new LivrosExport(null, null, null, $ids))->download($fileName);
+        }
 
         return (new LivrosExport(
             $request->query('query'),
@@ -56,14 +66,26 @@ class LivroController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $livros = Livro::query()
-            ->when($request->query('query'), fn($q) => $q->where('titulo', 'like', "%".$request->query('query')."%"))
-            ->when($request->query('editora'), fn($q) => $q->where('editora_id', $request->query('editora')))
-            ->when($request->query('autor'), fn($q) => $q->whereHas('autores', fn($q2) => $q2->where('id', $request->query('autor'))))
-            ->get();
+        $ids = $request->query('ids', []);
+        if (is_string($ids)) {
+            $ids = json_decode($ids, true) ?: explode(',', $ids);
+        }
+        $ids = (array) $ids;
+
+        if (!empty($ids)) {
+            $livros = Livro::with(['editora', 'autores'])
+                ->whereIn('id', $ids)
+                ->get();
+        } else {
+            $livros = Livro::query()
+                ->when($request->query('query'), fn($q) => $q->where('titulo', 'like', "%".$request->query('query')."%"))
+                ->when($request->query('editora'), fn($q) => $q->where('editora_id', $request->query('editora')))
+                ->when($request->query('autor'), fn($q) => $q->whereHas('autores', fn($q2) => $q2->where('id', $request->query('autor'))))
+                ->get();
+        }
 
         $pdf = PDF::loadView('livros.export_pdf', compact('livros'))
-        ->setPaper('a4', 'landscape');
+            ->setPaper('a4', 'landscape');
 
         return $pdf->download('livros_' . now()->format('Ymd_His') . '.pdf');
     }
@@ -80,9 +102,7 @@ class LivroController extends Controller
 
     public function store(Request $request)
     {
-        //Log::info('Entrou no create');
         $this->authorize('create', Livro::class);
-        //Log::info($request);
         $validated = $request->validate([
             'titulo' => 'required|string',
             'bibliografia' => 'nullable|string',
@@ -98,27 +118,39 @@ class LivroController extends Controller
             'autores.*' => 'nullable|string',
             
         ]);
-        //Log::info($validated);
 
         if ($request->filled('nova_editora')) {
-            $editora = Editora::firstOrCreate(['nome' => $request->nova_editora]);
+            $editora = Editora::firstOrCreate(
+                ['nome' => $request->nova_editora],
+                [
+                    'origem' => 'manual',          
+                    'user_id' => auth()->id(),
+                ]
+            );
             $editoraId = $editora->id;
         } else {
             $editoraId = $validated['editora_id'];
         }
 
         $autor_ids = $validated['autores'] ?? [];
+
         if ($request->filled('novos_autores')) {
             foreach ($request->novos_autores as $novoAutor) {
                 if ($novoAutor) {
-                    $autor = Autor::firstOrCreate(['nome' => $novoAutor]);
+                    $autor = Autor::firstOrCreate(
+                        ['nome' => $novoAutor],
+                        [
+                            'origem' => 'manual', 
+                            'user_id' => auth()->id(),
+                        ]
+                    );
                     $autor_ids[] = $autor->id;
                 }
             }
         }
 
-        //Log::info($autor_ids);
         $autor_ids = array_filter($autor_ids, fn($id) => !empty($id));
+
         if ($request->hasFile('capa')) {
             $caminhoCapa = $request->file('capa')->store('capas', 'public');
         } elseif ($request->filled('capa_url')) {
@@ -136,6 +168,8 @@ class LivroController extends Controller
             'isbn' => $validated['isbn'],
             'status' => 'disponivel',
             'editora_id' => $editoraId,
+            'origem' => 'manual',   // ou 'import' se livro vier de importação
+            'user_id' => auth()->id(),
         ];
 
         $livro = Livro::create($dadosLivro);

@@ -139,6 +139,9 @@ class AutorController extends Controller
             $validated['foto_url'] = $request->file('foto')->store('autores', 'public');
         }
 
+        $validated['origem'] = 'manual'; 
+        $validated['user_id'] = auth()->id();
+
         Autor::create($validated);
 
         return redirect()->route('autores.index')->with('success', 'Autor criado com sucesso.');

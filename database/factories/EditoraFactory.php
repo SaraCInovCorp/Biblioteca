@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
  */
 class EditoraFactory extends Factory
 {
+    protected $model = Editora::class;
     /**
      * Define the model's default state.
      *
@@ -23,6 +24,8 @@ class EditoraFactory extends Factory
         return [
             'nome' => fake()->company(),
             'logo_url' => 'https://picsum.photos/150/200?image=' . $this->faker->numberBetween(1, 1000),
+            'origem' => 'seeder', 
+            'user_id' => 1,
         ];
     }
 }

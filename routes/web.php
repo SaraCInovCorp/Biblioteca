@@ -36,8 +36,10 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     
     // Rotas para importação via API Google Books
     Route::get('/livros/import', [LivroImportController::class, 'showImportPage'])->name('livros.import.page');
-    Route::get('/livros/import/search', [LivroImportController::class, 'searchGoogleBooks'])->name('livros.import.search');
     Route::post('/livros/import', [LivroImportController::class, 'importSelected'])->name('livros.import.store');
+    Route::get('/livros/import/search', [LivroImportController::class, 'searchGoogleBooks'])->name('livros.import.search');
+    Route::get('/livros/importados/list', [LivroImportController::class, 'listaImportados'])->name('livros.importados.list');
+    
 
     Route::get('livros/create', [LivroController::class, 'create'])->name('livros.create');
     Route::post('livros', [LivroController::class, 'store'])->name('livros.store');
@@ -104,4 +106,8 @@ Route::get('editoras/export/pdf', [EditoraController::class, 'exportPdf'])->name
 
 Route::get('autores/export/excel', [AutorController::class, 'exportExcel'])->name('autores.export.excel');
 Route::get('autores/export/pdf', [AutorController::class, 'exportPdf'])->name('autores.export.pdf');
+
+Route::get('importacoes/{id}/export/excel', [LivroImportController::class, 'exportExcelPorImportacao'])->name('importacoes.export.excel');
+Route::get('importacoes/{id}/export/pdf', [LivroImportController::class, 'exportPdfPorImportacao'])->name('importacoes.export.pdf');
+
 

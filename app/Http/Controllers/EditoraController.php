@@ -139,6 +139,9 @@ class EditoraController extends Controller
             $validated['logo_url'] = $request->file('logo')->store('editoras', 'public');
         }
 
+        $validated['origem'] = 'manual';
+        $validated['user_id'] = auth()->id();
+
         Editora::create($validated);
 
         return redirect()->route('editoras.index')->with('success', 'Editora criada com sucesso.');

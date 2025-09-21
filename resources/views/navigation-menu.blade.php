@@ -24,9 +24,11 @@
                      <x-nav-link href="/autores" :active="request()->routeIs('dashboard')">
                         {{ __('Autores') }}
                     </x-nav-link>
-                    <x-nav-link href="/requisicoes" :active="request()->routeIs('dashboard')">
-                        {{ __('Requisições') }}
-                    </x-nav-link>
+                    @auth
+                        <x-nav-link href="/requisicoes" :active="request()->routeIs('requisicoes.*')">
+                            {{ __('Requisições') }}
+                        </x-nav-link>
+                    @endauth
                 </div>
             </div>
 
@@ -109,6 +111,12 @@
                                 @if ($isAdmin)
                                     <x-dropdown-link href="{{ route('livros.import.page') }}">
                                         {{ __('Importar Livros') }}
+                                    </x-dropdown-link>
+                                @endif
+
+                                @if ($isAdmin)
+                                    <x-dropdown-link href="{{ route('livros.importados.list') }}">
+                                        {{ __('Lista de Importações') }}
                                     </x-dropdown-link>
                                 @endif
 
