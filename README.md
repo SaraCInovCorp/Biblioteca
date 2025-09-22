@@ -71,7 +71,7 @@ O sistema possui uma funcionalidade dedicada que permite importar livros diretam
 
 ### Considerações Técnicas
 
-- Paginação pode ser adicionada para buscar mais resultados da API (limite padrão da Google Books é 40 por consulta).
+- Paginação incremental implementada na busca da API Google Books, permitindo carregar mais resultados ao usuário de forma dinâmica e responsiva, respeitando o limite padrão de 40 resultados por consulta da API.
 - A funcionalidade integra-se com as policies do Laravel para controle de acesso.
 - O campo ISBN é utilizado como identificador único para prevenir cadastros duplicados.
 
@@ -79,22 +79,73 @@ O sistema possui uma funcionalidade dedicada que permite importar livros diretam
 
 Este recurso facilita a manutenção e atualização do acervo, integrando informações reais e garantindo a qualidade dos dados do sistema.
 
+### Funcionalidade: Listagem e Detalhe das Importações
+
+- O sistema inclui uma página para visualizar todas as importações feitas pelo usuário.  
+- Permite destaque da importação selecionada, com visualização dos livros importados.  
+- Interface responsiva com paginação para melhor navegação.
+
+---
+
+### Funcionalidade: Exportação para Excel e PDF
+
+- Exporta os livros tanto no contexto geral quanto filtrados por importação selecionada.  
+- Suporta exportar via links específicos para cada importação, garantindo dados consistentes.  
+- Exportações nos formatos Excel e PDF, com imagens tratadas e layout otimizado.  
+- As rotas de exportação incluem parâmetros para filtrar livros conforme origem (importação, filtros gerais, etc).
+
+---
+
+## Banco de Dados e Relacionamentos
+
+- Usa SQLite para armazenamento local simples e ágil.  
+- Arquivo `database/database.sqlite` criado manualmente (vazio).  
+
+O projeto possui uma modelagem robusta, com as seguintes tabelas e relacionamentos principais:
+
+- **livros**  
+  Armazena os livros com campos: `isbn`, `titulo`, `bibliografia`, `preco`, `capa_url`, `status`, e chave estrangeira `editora_id`.
+
+- **autores**  
+  Lista de autores, relacionados a livros via relacionamento muitos-para-muitos.
+
+- **editoras**  
+  Editoras vinculadas aos livros.
+
+- **autor_livro** (pivot)  
+  Relação muitos-para-muitos entre autores e livros.
+
+- **importacoes**  
+  Registros das importações feitas pelos usuários.
+
+- **livro_importacao** (pivot)  
+  Relação muitos-para-muitos entre livros e importações.
+
+- **autor_importacao** (pivot)  
+  Relação muitos-para-muitos entre autores e importações.
+
+- **editora_importacao** (pivot)  
+  Relação muitos-para-muitos entre editoras e importações.
+
+- **book_requests**  
+  Requisições feitas pelos usuários, contendo dados como usuário requisitante, datas e status.
+
+- **book_request_items**  
+  Ligação individual de livros a requisições, com status, data prevista e data real de entrega.
+
+Essas tabelas pivot garantem a flexibilidade para associar múltiplos autores e editoras a livros e importações, além de armazenar o histórico completo das requisições.
+
 ---
 
 ## Funcionalidades Principais
 
-- Cadastro, edição e exclusão de livros, editoras e autores.  
-- Pesquisa e filtros avançados para localização rápida dos registros, incluindo:  
-  - Pesquisa por título do livro e nome do autor.  
-  - Filtros por status da requisição (ativa/inativa) e status dos itens da requisição (`cancelada`, `realizada`, `entregue_ok`, etc).  
-  - Filtros por datas: data da requisição, data prevista de entrega e data real de entrega, com possibilidade de busca exata ou intervalo.  
-  - Filtro por usuário (apenas para administradores).  
-- Paginação simples e eficiente usando método `paginate` do Laravel.  
-- Exportação integrada para Excel e PDF, com tratamento adequado para imagens locais e URLs externas.  
-- Geração de PDFs em modo paisagem para melhor visualização.  
-- Autenticação segura com Laravel Jetstream, suporte a dois fatores (2FA), e controle de perfis (admin/cidadão).  
-- Interface server-rendered com Blade, garantindo simplicidade e desempenho.  
-- Listagem detalhada da requisição, com dados individuais por item, incluindo data real de entrega, dias decorridos e status específico do item.  
+- Gerenciamento completo de livros, autores e editoras.  
+- Pesquisas complexas com inúmeros filtros (por título, autor, status, data, usuário).  
+- Paginação eficiente utilizando o método `paginate` do Laravel.  
+- Exportação flexível para Excel e PDF.  
+- Sistema de requisição com limite para usuários cidadãos e gerenciamento de status.  
+- Controle de acesso avançado via Laravel Jetstream com autenticação 2FA.  
+- Interfaces server-rendered modernas com Blade e componentes reutilizáveis.
 
 ---
 
@@ -121,14 +172,6 @@ O sistema implementa um fluxo completo para o processo de requisição de livros
 
 - **Detalhamento:**  
   Visualização exibe dados do usuário (para admin), detalhes da requisição e lista de livros com informações específicas por item.
-
----
-
-## Banco de Dados
-
-- Usa SQLite para armazenamento local simples e ágil.  
-- Arquivo `database/database.sqlite` criado manualmente (vazio).  
-- Modelos estruturados para relacionamentos entre livros, autores, editoras, usuários, requisições e itens.  
 
 ---
 
@@ -166,16 +209,21 @@ npm run build
 ```
 
 ### 4. Crie banco SQLite vazio:
-```
 
 - Linux/Mac:
 
+```
 touch database/database.sqlite
 
 ```
+
 - Windows:
 
+```
+
 Crie manualmente um arquivo vazio `database.sqlite` na pasta `database`
+
+```
 
 ### 5. Configure o `.env` para usar SQLite e escolha o tipo de seed:
 ```
@@ -196,15 +244,22 @@ php artisan migrate --seed
 ```
 
 ### 7. Inicie o servidor local (se aplicável):
-```
 
 Se estiver desenvolvendo localmente sem servidor web configurado, execute:
+```
 php artisan serve 
 
 ```
 
-### 8. Acesse em http://nomedoprojeto.test (ou conforme configurado).
----
+### 8. Acesse em 
+
+```
+
+http://nomedoprojeto.test 
+
+```
+
+(ou conforme configurado).
 
 ## Instalação do Laravel Jetstream com Livewire
 
@@ -217,7 +272,6 @@ npm run build
 php artisan migrate
 
 ```
-
 ---
 
 ## Exportação
@@ -238,14 +292,6 @@ php artisan migrate
 
 - Views e layouts organizados para modularidade.  
 - Uso extensivo de componentes Blade e diretivas.
-
----
-
-## Filtros Avançados
-
-- Pesquisa integrada para livro e autor.  
-- Filtros combinados por status da requisição, status dos itens, data da requisição, previsão e data real de entrega.  
-- Controle por usuário para administradores.
 
 ---
 
