@@ -45,8 +45,9 @@
                 <p class="mt-1"><span class="font-semibold">Bibliografia:</span><span class="text-sm italic block mt-1"> <br/>{{ $livro->bibliografia }}</span></p>
                 <p class="mt-4"><span class="font-semibold">Editora:</span> <br/>{{ $livro->editora->nome ?? 'Editora não informada' }}</p>
                 <p class="mt-2"><span class="font-semibold">Autor(es):</span> <br/>{{ $livro->autores->pluck('nome')->join(', ') ?? 'Autor não informado' }}</p>
+                <p class="mt-2"><span class="font-semibold">Preço:</span>  <br/>€ {{  $livro->preco }}</p>
                 <p class="mt-2">
-                    <span class="font-semibold">Status:</span> 
+                    <span class="font-semibold">Status:</span>   <br/>
                     @if($livro->status === 'disponivel')
                         <span class="text-green-600 uppercase">Disponível</span>
                     @elseif($livro->status === 'requisitado')
@@ -57,25 +58,49 @@
                 </p>
 
                 <p class="mt-2"><span class="font-semibold">ISBN:</span> <br/>{{ $livro->isbn }}</p>
-                <h3 class="font-semibold mt-6 mb-2">Histórico de Requisições deste Livro</h3>
-                @if($historico->isEmpty())
-                    <p class="text-gray-600 italic">Nenhuma requisição para este livro.</p>
-                @else
-                    <ul class="space-y-3">
-                        @foreach($historico as $item)
-                            <li class="bg-gray-50 p-3 rounded shadow">
-                                <p><strong>
-                                    <a href="{{ route('requisicoes.show', $item->bookRequest) }}" class="text-blue-600 hover:underline">
-                                        Requisição #{{ $item->bookRequest->id }}
-                                    </a>
-                                </strong> - {{ $item->bookRequest->user->name ?? 'Usuário deletado' }}</p>
-                                <p>Data Início: {{ Carbon::parse($item->bookRequest->data_inicio)->format('d/m/Y') }}</p>
-                                <p>Status do item: {{ ucfirst($item->status) }}</p>
-                                <p>Data Real de Entrega: {{ $item->data_real_entrega ? \Carbon\Carbon::parse($item->data_real_entrega)->format('d/m/Y') : 'Não entregue' }}</p>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
+                <x-stats title="Requisições" :total="$totalRequisicoes" :tusuarios="$totalUsuarios"  />
+                    @if(auth()->check() && !$historico->isEmpty())
+                        <ul class="space-y-3">
+                            @foreach($historico as $item)
+                                <li class="bg-gray-50 p-3 rounded shadow">
+                                    <p>
+                                        @if(auth()->user()->isAdmin())
+                                            <strong>
+                                                <a href="{{ route('requisicoes.show', $item->bookRequest) }}" class="text-blue-600 hover:underline">
+                                                    Requisição #{{ $item->bookRequest->id }}
+                                                </a>
+                                            </strong> - {{ $item->bookRequest->user->name ?? 'Usuário deletado' }}
+                                        @else
+                                            <a href="{{ route('requisicoes.show', $item->bookRequest) }}" class="text-blue-600 hover:underline">
+                                                Detalhes da sua requisição #{{ $item->bookRequest->id }}
+                                            </a>
+                                        @endif
+                                    </p>
+                                    <p><strong>Data Início:</strong> {{ Carbon::parse($item->bookRequest->data_inicio)->format('d/m/Y') }}</p>
+                                    <p><strong>Status do item:</strong> {{ ucfirst($item->status) }}</p>
+                                    <p>
+                                        
+                                        @if ($item->data_real_entrega)
+                                            <strong>Data de Entrega:</strong>
+                                                {{ Carbon::parse($item->data_real_entrega)->format('d/m/Y') }}
+                                        @else
+                                            <strong>Data de Previsão de Entrega:</strong>
+                                                {{ $item->bookRequest->data_fim ? Carbon::parse($item->bookRequest->data_fim)->format('d/m/Y') : 'Não entregue' }}
+                                        @endif
+                                    </p>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @elseif(auth()->check() && $historico->isEmpty())
+                        <p class="text-gray-600 italic">
+                            @if(auth()->user()->isAdmin())
+                                Nenhuma requisição para este livro.
+                            @else
+                                Você não realizou nenhuma requisição deste livro.
+                            @endif
+                        </p>
+                    @endif
+
             </div>
         </div>
         <script>

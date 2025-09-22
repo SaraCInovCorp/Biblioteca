@@ -12,6 +12,8 @@ use PDF; // Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class LivroController extends Controller
 {
@@ -182,11 +184,34 @@ class LivroController extends Controller
 
     public function show(Livro $livro)
     {
-        $livro->load(['autores', 'editora', 'bookRequestItems.bookRequest.user']);
+        $livro->load(['autores', 'editora']);
 
-        $historico = $livro->bookRequestItems()->with('bookRequest.user')->orderByDesc('created_at')->get();
+        $user = Auth::user();
 
-        return view('livros.show', compact('livro', 'historico'));
+        $totalRequisicoes = $livro->bookRequestItems()->count();
+
+        $totalUsuarios = DB::table('book_request_items')
+            ->join('book_requests', 'book_request_items.book_request_id', '=', 'book_requests.id')
+            ->where('book_request_items.livro_id', $livro->id)
+            ->distinct()
+            ->count('book_requests.user_id');
+
+        if (!$user) {
+            $historico = collect();
+        } elseif ($user->isAdmin()) {
+            $historico = $livro->bookRequestItems()
+                ->with('bookRequest.user')
+                ->orderByDesc('created_at')
+                ->get();
+        } else {
+            $historico = $livro->bookRequestItems()
+                ->whereHas('bookRequest', fn($q) => $q->where('user_id', $user->id))
+                ->with('bookRequest')
+                ->orderByDesc('created_at')
+                ->get();
+        }
+
+        return view('livros.show', compact('livro', 'historico', 'totalRequisicoes', 'totalUsuarios'));
     }
 
     public function pesquisarGoogleBooks(Request $request)
