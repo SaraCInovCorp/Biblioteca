@@ -75,8 +75,6 @@ O sistema possui uma funcionalidade dedicada que permite importar livros diretam
 - A funcionalidade integra-se com as policies do Laravel para controle de acesso.
 - O campo ISBN é utilizado como identificador único para prevenir cadastros duplicados.
 
----
-
 Este recurso facilita a manutenção e atualização do acervo, integrando informações reais e garantindo a qualidade dos dados do sistema.
 
 ### Funcionalidade: Listagem e Detalhe das Importações
@@ -84,8 +82,6 @@ Este recurso facilita a manutenção e atualização do acervo, integrando infor
 - O sistema inclui uma página para visualizar todas as importações feitas pelo usuário.  
 - Permite destaque da importação selecionada, com visualização dos livros importados.  
 - Interface responsiva com paginação para melhor navegação.
-
----
 
 ### Funcionalidade: Exportação para Excel e PDF
 
