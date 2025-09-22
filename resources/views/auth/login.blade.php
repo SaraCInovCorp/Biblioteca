@@ -1,10 +1,7 @@
 <x-guest-layout>
     <div class="flex-1 ">
     <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo size="20" />
-        </x-slot>
-
+        
         <x-validation-errors class="mb-4" />
 
         @session('status')

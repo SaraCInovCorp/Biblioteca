@@ -1,9 +1,6 @@
 <x-guest-layout>
     <div class="flex-1 ">
     <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo size="16" />
-        </x-slot>
 
         <div x-data="{ recovery: false }">
             <div class="mb-4 text-sm text-gray-600 dark:text-gray-400" x-show="! recovery">

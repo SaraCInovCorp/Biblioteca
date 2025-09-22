@@ -1,9 +1,6 @@
 <x-guest-layout>
     <div class="flex-1 ">
     <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo size="20" />
-        </x-slot>
 
         <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
             {{ __('Antes de prosseguir, por favor, confirme seu endereço de e-mail clicando no link que enviamos para sua caixa de entrada. Se você não recebeu o e-mail, teremos prazer em enviar outro para você.') }}

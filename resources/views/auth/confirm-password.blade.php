@@ -1,9 +1,6 @@
 <x-guest-layout>
     <div class="flex-1 ">
     <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo size="16"/>
-        </x-slot>
 
         <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
             {{ __('Esta é uma área segura do aplicativo. Por favor, confirme sua senha antes de continuar.') }}

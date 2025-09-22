@@ -1,9 +1,6 @@
 <x-guest-layout>
     <div class="flex-1 ">
     <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo size="20" />
-        </x-slot>
 
         <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
             {{ __('Esqueceu sua senha? Sem problemas. Basta nos informar seu endereço de e-mail e enviaremos um link para redefinição de senha que permitirá que você escolha uma nova.') }}
