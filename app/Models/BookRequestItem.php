@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\BookReview;
+use App\Models\Livro;
+use App\Models\BookRequest;
 
 class BookRequestItem extends Model
 {
@@ -27,5 +30,15 @@ class BookRequestItem extends Model
     public function bookRequest(): BelongsTo
     {
         return $this->belongsTo(BookRequest::class,'book_request_id');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(BookReview::class, 'book_request_item_id');
+    }
+
+    public function bookReview()
+    {
+        return $this->hasOne(BookReview::class, 'book_request_item_id');
     }
 }

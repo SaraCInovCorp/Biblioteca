@@ -7,6 +7,8 @@ use App\Models\Livro;
 use App\Models\Autor;
 use App\Models\Editora;
 use App\Exports\LivrosExport;
+use App\Models\BookRequestItem;
+use App\Models\BookRequest;
 use Maatwebsite\Excel\Facades\Excel;
 use PDF; // Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -37,7 +39,7 @@ class LivroController extends Controller
                 });
             })
             ->paginate(6)
-            ->appends($request->only(['query', 'editora', 'autor'])); // mantém filtros na paginação
+            ->appends($request->only(['query', 'editora', 'autor'])); 
 
         $editoras = Editora::all();
         $autores = Autor::all();
@@ -211,7 +213,10 @@ class LivroController extends Controller
                 ->get();
         }
 
-        return view('livros.show', compact('livro', 'historico', 'totalRequisicoes', 'totalUsuarios'));
+        $allReviews = $livro->reviews()->with('user')->get();
+        $approvedReviews = $allReviews->where('status', 'ativo');
+
+        return view('livros.show', compact('livro', 'historico', 'totalRequisicoes', 'totalUsuarios', 'approvedReviews'));
     }
 
     public function pesquisarGoogleBooks(Request $request)

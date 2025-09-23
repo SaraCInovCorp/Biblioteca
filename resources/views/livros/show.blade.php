@@ -39,6 +39,15 @@
                 </form>
 
                 @endif
+                @foreach ($approvedReviews as $review)
+                    <x-card-review-p 
+                        userName="{{ $review->user->name }}" 
+                        reviewText="{{ $review->review_text }}" 
+                        status="{{ $review->status }}"
+                        style="width: 14rem;" 
+                    />
+
+                @endforeach
             </div>
             <div class="max-w-3xl p-6 bg-white rounded-lg shadow-md">
                 <h2 class="text-xl font-bold mb-4">{{ $livro->titulo }}</h2>
@@ -102,6 +111,7 @@
                     @endif
 
             </div>
+            
         </div>
         <script>
             function adicionarLivroEIrCriar(id, titulo, autor) {

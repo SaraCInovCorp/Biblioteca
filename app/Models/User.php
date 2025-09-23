@@ -11,6 +11,7 @@ use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\BookRequest;
+use App\Models\BookReview;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -87,4 +88,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(BookRequest::class, 'user_id', 'id');
     }
-}
+
+    public function reviews()
+    {
+        return $this->hasMany(BookReview::class, 'user_id');
+    }
+    }

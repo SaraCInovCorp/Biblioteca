@@ -11,6 +11,7 @@ use App\Http\Controllers\BookRequestSessionController;
 use App\Http\Controllers\AdminRegisterController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LivroImportController;
+use App\Http\Controllers\ReviewController;
 use App\Models\Livro;
 use App\Models\User;
 use App\Models\Autor;
@@ -23,22 +24,22 @@ Route::get('/', [HomeController::class, 'index'])->name('welcome');
 // Rotas protegidas para criação, edição, exclusão, etc.
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
 
-    Route::get('/dashboard', function () {
+    Route::get('dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
 
-    Route::get('/admin/register', [AdminRegisterController::class, 'create'])->name('admin.register');
-    Route::post('/admin/register', [AdminRegisterController::class, 'store'])->name('admin.register.store');
+    Route::get('admin/register', [AdminRegisterController::class, 'create'])->name('admin.register');
+    Route::post('admin/register', [AdminRegisterController::class, 'store'])->name('admin.register.store');
 
-    Route::get('/google-books', [LivroController::class, 'pesquisarGoogleBooks'])->name('google-books.search');
-    Route::get('/editoras/check', [EditoraController::class, 'check'])->name('editoras.check');
-    Route::get('/autores/check', [AutorController::class, 'check'])->name('autores.check');
+    Route::get('google-books', [LivroController::class, 'pesquisarGoogleBooks'])->name('google-books.search');
+    Route::get('editoras/check', [EditoraController::class, 'check'])->name('editoras.check');
+    Route::get('autores/check', [AutorController::class, 'check'])->name('autores.check');
     
     // Rotas para importação via API Google Books
-    Route::get('/livros/import', [LivroImportController::class, 'showImportPage'])->name('livros.import.page');
-    Route::post('/livros/import', [LivroImportController::class, 'importSelected'])->name('livros.import.store');
-    Route::get('/livros/import/search', [LivroImportController::class, 'searchGoogleBooks'])->name('livros.import.search');
-    Route::get('/livros/importados/list', [LivroImportController::class, 'listaImportados'])->name('livros.importados.list');
+    Route::get('livros/import', [LivroImportController::class, 'showImportPage'])->name('livros.import.page');
+    Route::post('livros/import', [LivroImportController::class, 'importSelected'])->name('livros.import.store');
+    Route::get('livros/import/search', [LivroImportController::class, 'searchGoogleBooks'])->name('livros.import.search');
+    Route::get('livros/importados/list', [LivroImportController::class, 'listaImportados'])->name('livros.importados.list');
     
 
     Route::get('livros/create', [LivroController::class, 'create'])->name('livros.create');
@@ -66,25 +67,32 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     // Route::resource('editoras', EditoraController::class)->except(['index', 'show']);
     
     //sessao requisicao
-    Route::post('/requisicoes/session', [BookRequestSessionController::class, 'storeBook'])->name('requisicoes.session.store');
-    Route::get('/requisicoes/session', [BookRequestSessionController::class, 'getBooks'])->name('requisicoes.session.get');
-    Route::post('/requisicoes/session/dates', [BookRequestSessionController::class, 'storeDates']);
-    Route::delete('/requisicoes/session', [BookRequestSessionController::class, 'removeBook']);
-    Route::delete('/requisicoes/session/clear', [BookRequestSessionController::class, 'clearBooks']);
+    Route::post('requisicoes/session', [BookRequestSessionController::class, 'storeBook'])->name('requisicoes.session.store');
+    Route::get('requisicoes/session', [BookRequestSessionController::class, 'getBooks'])->name('requisicoes.session.get');
+    Route::post('requisicoes/session/dates', [BookRequestSessionController::class, 'storeDates']);
+    Route::delete('requisicoes/session', [BookRequestSessionController::class, 'removeBook']);
+    Route::delete('requisicoes/session/clear', [BookRequestSessionController::class, 'clearBooks']);
 
     // Requisições protegidas
     Route::get('requisicoes', [BookRequestController::class, 'index'])->name('requisicoes.index');
     Route::get('requisicoes/create', [BookRequestController::class, 'create'])->name('requisicoes.create');
     Route::post('requisicoes', [BookRequestController::class, 'store'])->name('requisicoes.store');
     Route::get('requisicoes/{bookRequest}/edit', [BookRequestController::class, 'edit'])->name('requisicoes.edit');
-    Route::get('/requisicoes/{bookRequest}', [BookRequestController::class, 'show'])->name('requisicoes.show');
+    Route::get('requisicoes/{bookRequest}', [BookRequestController::class, 'show'])->name('requisicoes.show');
     Route::put('requisicoes/{bookRequest}', [BookRequestController::class, 'update'])->name('requisicoes.update');
     Route::delete('requisicoes/{bookRequest}', [BookRequestController::class, 'destroy'])->name('requisicoes.destroy');
 
+    // Rotas para gerenciamento de reviews
+    Route::get('reviews', [ReviewController::class, 'index'])->name('reviews.index');
+    Route::post('reviews/bulk-update', [ReviewController::class, 'bulkUpdate'])->name('reviews.bulkUpdate');
+    Route::get('reviews/{bookReview}', [ReviewController::class, 'show'])->name('reviews.show');
+    Route::get('reviews/{bookReview}/edit', [ReviewController::class, 'edit'])->name('reviews.edit');
+    Route::put('reviews/{bookReview}', [ReviewController::class, 'update'])->name('reviews.update');
+
 
     //pesquisa de usuario
-    Route::get('/users/search', [BookRequestController::class, 'searchUsers'])->name('users.search');
-    Route::get('/users/{user?}', [UserController::class, 'show'])->name('users.show');
+    Route::get('users/search', [BookRequestController::class, 'searchUsers'])->name('users.search');
+    Route::get('users/{user?}', [UserController::class, 'show'])->name('users.show');
 });
 
 // Rotas públicas para livros, autores e editoras - apenas index e show

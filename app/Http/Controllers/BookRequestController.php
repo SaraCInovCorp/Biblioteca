@@ -12,7 +12,10 @@ use App\Mail\PedidoConfirmacaoMail;
 use App\Mail\PedidoNotificacaoMail;
 use App\Models\User;
 use App\Models\Autor;
+use App\Models\BookReview;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
+use App\Mail\ReviewCreatedAdminNotification;
 
 class BookRequestController extends Controller
 {
@@ -267,27 +270,53 @@ class BookRequestController extends Controller
                 $q->where('book_request_id', $bookRequest->id);
             })->get();
 
+        $bookRequest->load('items.livro', 'items.bookReview');
+
         return view('requisicoes.edit', compact('bookRequest', 'livros'));
     }
 
     public function update(Request $request, BookRequest $bookRequest)
     {
+        \Log::info('Request POST data:', $request->all());
         $this->authorize('update', $bookRequest);
 
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'data_inicio' => 'required|date',
-            'data_fim' => 'required|date|after_or_equal:data_inicio',
+            'data_fim' => 'required|date',
             'notas' => 'nullable|string',
             'items' => 'required|array|min:1',
-            'items.*.id' => 'sometimes|exists:book_request_items,id', // ajustado para identificar item
-            'items.*.livro_id' => 'required|exists:livros,id',
-            'items.*.data_real_entrega' => 'nullable|after_or_equal:data_inicio',
-            'items.*.dias_decorridos' => 'nullable',
-            'items.*.status' => 'required',
-            'items.*.obs' => 'nullable|string',
+            'items.*.id' => ['nullable', 'integer', 'exists:book_request_items,id'],
+            'items.*.livro_id' => ['required', 'integer', 'exists:livros,id'],
+            'items.*.data_real_entrega' => ['nullable', 'date'],
+            'items.*.dias_decorridos' => ['nullable', 'integer'],
+            'items.*.status' => ['required', 'string'],
+            'items.*.obs' => ['nullable', 'string'],
+            'items.*.review_text' => ['nullable', 'string'],
         ]);
 
-        // Se a data fim mudou, limpar lembrete para reenvio
+        if (!$validator->fails()) {
+            $dataInicio = Carbon::parse($request->input('data_inicio'));
+
+            foreach ($request->input('items', []) as $index => $item) {
+                if (!empty($item['data_real_entrega'])) {
+                    $dataEntrega = Carbon::parse($item['data_real_entrega']);
+                    if ($dataEntrega->lt($dataInicio)) {
+                        $validator->errors()->add("items.$index.data_real_entrega", "Data de Entrega Real deve ser maior ou igual à data de início.");
+                    }
+                }
+            }
+        }
+
+        if ($validator->fails()) {
+            \Log::error('Falha na validação em update de requisição', [
+                'errors' => $validator->errors()->all(),
+                'input' => $request->all(),
+            ]);
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $validated = $validator->validated();
+
         if ($bookRequest->data_fim != $validated['data_fim']) {
             $bookRequest->lembrete_enviado_em = null;
             $bookRequest->lembrete_enviado_para = null;
@@ -298,43 +327,80 @@ class BookRequestController extends Controller
         \DB::beginTransaction();
 
         try {
-            foreach ($validated['items'] as $item) {
-                $isAtivo = $isAtivo || in_array($item['status'], ['realizada', 'nao_entregue']);
+            \Log::info('Iniciando atualização dos itens.');
+            foreach ($validated['items'] as $itemData) {
+                $isAtivo = $isAtivo || in_array($itemData['status'], ['realizada', 'nao_entregue']);
 
-                if (!empty($item['id'])) {
-                    // Atualiza item existente
-                    $bookRequestItem = BookRequestItem::find($item['id']);
+                if (!empty($itemData['id'])) {
+                    $bookRequestItem = BookRequestItem::find($itemData['id']);
                     if ($bookRequestItem) {
+
                         $bookRequestItem->update([
-                            'livro_id' => $item['livro_id'],
-                            'data_real_entrega' => $item['data_real_entrega'] ?? null,
-                            'dias_decorridos' => $item['dias_decorridos'] ?? null,
-                            'status' => $item['status'],
-                            'obs' => $item['obs'] ?? null,
+                            'livro_id' => $itemData['livro_id'],
+                            'data_real_entrega' => $itemData['data_real_entrega'] ?? null,
+                            'dias_decorridos' => $itemData['dias_decorridos'] ?? null,
+                            'status' => $itemData['status'],
+                            'obs' => $itemData['obs'] ?? null,
                         ]);
 
-                        $livro = Livro::find($item['livro_id']);
-                        $livro->status = in_array($item['status'], ['realizada', 'nao_entregue']) ? $livro->status : 'disponivel';
+                        $livro = Livro::find($itemData['livro_id']);
+                        $livro->status = in_array($itemData['status'], ['realizada', 'nao_entregue']) ? $livro->status : 'disponivel';
                         $livro->save();
+
+                        $user = auth()->user();
+                        if ($user->isCidadao() && in_array($itemData['status'], ['entregue_ok', 'entregue_obs'])) {
+                            $reviewText = trim($itemData['review_text'] ?? '');
+
+                            if ($reviewText !== '') {
+                                $existingReview = BookReview::where('book_request_item_id', $bookRequestItem->id)
+                                    ->where('user_id', $user->id)
+                                    ->first();
+
+                                if (!$existingReview) {
+                                    $review = BookReview::create([
+                                        'book_request_item_id' => $bookRequestItem->id,
+                                        'livro_id' => $bookRequestItem->livro_id,
+                                        'user_id' => $user->id,
+                                        'review_text' => $reviewText,
+                                        'status' => 'suspenso',
+                                        'admin_justification' => null,
+                                    ]);
+
+                                    $admins = User::where('role', 'admin')->pluck('email')->toArray();
+                                    Mail::to($admins)->send(new ReviewCreatedAdminNotification($review));
+                                } else {
+                                    if (in_array($existingReview->status, ['ativo', 'recusado'])) {
+                                        $existingReview->status = 'suspenso';
+                                        $existingReview->admin_justification = null;
+                                    }
+                                    $existingReview->review_text = $reviewText;
+                                    $existingReview->save();
+
+                                    if (in_array($existingReview->status, ['suspenso'])) {
+                                        $admins = User::where('role', 'admin')->pluck('email')->toArray();
+                                        Mail::to($admins)->send(new ReviewCreatedAdminNotification($existingReview));
+                                    }
+                                }
+                            }
+                        }
                     }
                 } else {
-                    // Criar item novo se quiser suportar adicionar itens na edição
                     $newItem = $bookRequest->items()->create([
-                        'livro_id' => $item['livro_id'],
-                        'data_real_entrega' => $item['data_real_entrega'] ?? null,
-                        'dias_decorridos' => $item['dias_decorridos'] ?? null,
-                        'status' => $item['status'],
-                        'obs' => $item['obs'] ?? null,
+                        'livro_id' => $itemData['livro_id'],
+                        'data_real_entrega' => $itemData['data_real_entrega'] ?? null,
+                        'dias_decorridos' => $itemData['dias_decorridos'] ?? null,
+                        'status' => $itemData['status'],
+                        'obs' => $itemData['obs'] ?? null,
                     ]);
 
-                    $livro = Livro::find($item['livro_id']);
-                    $livro->status = in_array($item['status'], ['realizada', 'nao_entregue']) ? $livro->status : 'disponivel';
+                    $livro = Livro::find($itemData['livro_id']);
+                    $livro->status = in_array($itemData['status'], ['realizada', 'nao_entregue']) ? $livro->status : 'disponivel';
                     $livro->save();
                 }
             }
 
             $validated['ativo'] = $isAtivo;
-
+            \Log::info('Itens atualizados, atualizando pedido.');
             // Atualiza dados do pedido
             $bookRequest->update([
                 'data_inicio' => $validated['data_inicio'],
@@ -344,15 +410,22 @@ class BookRequestController extends Controller
                 'lembrete_enviado_em' => $bookRequest->lembrete_enviado_em,
                 'lembrete_enviado_para' => $bookRequest->lembrete_enviado_para,
             ]);
-
+            \Log::info('Pedido atualizado, commit.');
             \DB::commit();
+            \Log::info('Transação commitada com sucesso.');
         } catch (\Exception $e) {
             \DB::rollBack();
-            return back()->withErrors(['error' => 'Erro ao atualizar requisição: ' . $e->getMessage()]);
+            \Log::error('Erro inesperado durante atualização de requisição: ' . $e->getMessage(), [
+                'exception' => $e,
+                'request_data' => $request->all(),
+            ]);
+
+            return back()->withErrors(['error' => 'Erro inesperado ao atualizar a requisição.'])->withInput();
         }
 
         return redirect()->route('requisicoes.show', $bookRequest)->with('success', 'Requisição atualizada com sucesso!');
     }
+
 
 
     public function searchUsers(Request $request)

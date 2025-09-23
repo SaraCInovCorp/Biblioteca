@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Editora;
 use App\Models\Autor;
 use App\Models\Importacao;
+use App\Models\BookReview;
+use App\Models\BookRequestItem;
+use App\Models\BookRequest;
 
 class Livro extends Model
 {
@@ -51,6 +54,11 @@ class Livro extends Model
     public function importacoes()
     {
         return $this->belongsToMany(Importacao::class, 'livro_importacao')->withTimestamps();
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(BookReview::class, 'livro_id');
     }
 
 }

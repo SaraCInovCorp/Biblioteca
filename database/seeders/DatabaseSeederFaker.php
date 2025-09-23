@@ -17,6 +17,7 @@ class DatabaseSeederFaker extends Seeder
             AutorSeeder::class,
             LivroSeeder::class,
             BookRequestSeeder::class,
+            BookReviewSeeder::class,
         ]);
     }
 }

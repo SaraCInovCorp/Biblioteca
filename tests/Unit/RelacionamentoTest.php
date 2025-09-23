@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\BookRequest;
 use App\Models\BookRequestItem;
 use App\Models\Importacao;
+use App\Models\BookReview;
 
 class RelacionamentoTest extends TestCase
 {
@@ -80,5 +81,45 @@ class RelacionamentoTest extends TestCase
             $this->assertTrue($livros->contains($item->livro));
         }
     }
+
+    public function test_book_review_relations_and_states()
+    {
+        $user = User::factory()->create();
+        $editora = Editora::factory()->create();
+        $livro = Livro::factory()->for($editora)->create();
+
+        $bookRequest = BookRequest::factory()->for($user)->create();
+        $item = BookRequestItem::factory()->for($bookRequest)->for($livro)->create([
+            'status' => 'entregue_ok',
+            'data_real_entrega' => now(),
+        ]);
+
+        $review = BookReview::factory()->create([
+            'book_request_item_id' => $item->id,
+            'livro_id' => $livro->id,
+            'user_id' => $user->id,
+            'status' => 'suspenso',
+            'review_text' => 'Este é um ótimo livro.',
+            'admin_justification' => null,
+        ]);
+
+        $review->refresh();
+
+        $this->assertEquals($item->id, $review->bookRequestItem->id);
+        $this->assertEquals($livro->id, $review->livro->id);
+        $this->assertEquals($user->id, $review->user->id);
+
+        $this->assertEquals('suspenso', $review->status);
+
+        $review->status = 'ativo';
+        $review->save();
+
+        $this->assertEquals('ativo', $review->fresh()->status);
+
+        $this->assertTrue($livro->reviews->contains($review));
+
+        $this->assertTrue($item->reviews->contains($review));
+    }
+
 }
 

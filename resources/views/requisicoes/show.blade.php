@@ -121,7 +121,7 @@
                 @endif
 
 
-                @if($isAdmin)
+                @if($isAdmin || auth()->id() === $bookRequest->user_id)
                     <x-button
                         onclick="location.href='{{ route('requisicoes.edit', $bookRequest) }}'"
                         type="button"

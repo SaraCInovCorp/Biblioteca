@@ -109,6 +109,12 @@
                                 </x-dropdown-link>
 
                                 @if ($isAdmin)
+                                    <x-dropdown-link href="{{ route('reviews.index') }}">
+                                        {{ __('Gestão Reviews') }}
+                                    </x-dropdown-link>
+                                @endif
+
+                                @if ($isAdmin)
                                     <x-dropdown-link href="{{ route('livros.import.page') }}">
                                         {{ __('Importar Livros') }}
                                     </x-dropdown-link>

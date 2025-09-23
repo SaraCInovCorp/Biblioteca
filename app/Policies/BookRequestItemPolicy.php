@@ -41,9 +41,13 @@ class BookRequestItemPolicy
 
     public function update(User $user, BookRequestItem $bookRequestItem): Response
     {
-        return $user->isAdmin()
-            ? Response::allow()
-            : Response::deny('Apenas administradores podem alterar itens.');
+        if ($user->isAdmin()) {
+            return Response::allow();
+        }
+        if ($user->isCidadao() && $bookRequest->user_id === $user->id) {
+            return Response::allow();
+        }
+        return Response::deny('Apenas administradores ou dono podem alterar requisições.');
     }
 
     public function delete(User $user, BookRequestItem $bookRequestItem): Response
