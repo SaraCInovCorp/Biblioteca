@@ -18,6 +18,7 @@ class DatabaseSeederApi extends Seeder
             LivroApiSeeder::class,
             BookRequestSeeder::class,
             BookReviewSeeder::class,
+            LivroWaitingListSeeder::class,
         ]);
     }
 }

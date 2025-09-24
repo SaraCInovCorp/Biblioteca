@@ -12,6 +12,7 @@ use App\Http\Controllers\AdminRegisterController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LivroImportController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\LivroWaitingListController;
 use App\Models\Livro;
 use App\Models\User;
 use App\Models\Autor;
@@ -40,8 +41,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::post('livros/import', [LivroImportController::class, 'importSelected'])->name('livros.import.store');
     Route::get('livros/import/search', [LivroImportController::class, 'searchGoogleBooks'])->name('livros.import.search');
     Route::get('livros/importados/list', [LivroImportController::class, 'listaImportados'])->name('livros.importados.list');
-    
 
+    Route::post('livros/{livro}/waiting-list', [LivroWaitingListController::class, 'store'])->name('livro-waiting-list.store');
+    
     Route::get('livros/create', [LivroController::class, 'create'])->name('livros.create');
     Route::post('livros', [LivroController::class, 'store'])->name('livros.store');
     Route::get('livros/{livro}/edit', [LivroController::class, 'edit'])->name('livros.edit');

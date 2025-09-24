@@ -140,6 +140,8 @@ Essas tabelas pivot garantem a flexibilidade para associar múltiplos autores e 
 - Paginação eficiente utilizando o método `paginate` do Laravel.  
 - Exportação flexível para Excel e PDF.  
 - Sistema de requisição com limite para usuários cidadãos e gerenciamento de status.  
+- Criação de reviews pelos usuários vinculadas aos livros requisitados. 
+- Gestão administrativa de reviews: painel para que administradores possam visualizar, filtrar, alterar status e justificar alterações em reviews enviados por usuários.
 - Controle de acesso avançado via Laravel Jetstream com autenticação 2FA.  
 - Interfaces server-rendered modernas com Blade e componentes reutilizáveis.
 

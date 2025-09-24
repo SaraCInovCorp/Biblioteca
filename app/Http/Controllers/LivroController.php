@@ -9,6 +9,7 @@ use App\Models\Editora;
 use App\Exports\LivrosExport;
 use App\Models\BookRequestItem;
 use App\Models\BookRequest;
+use App\Models\LivroWaitingList;
 use Maatwebsite\Excel\Facades\Excel;
 use PDF; // Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\LivroDisponivelNotification;
+use Illuminate\Support\Facades\Notification;
 
 class LivroController extends Controller
 {
@@ -200,23 +203,30 @@ class LivroController extends Controller
 
         if (!$user) {
             $historico = collect();
+            $estaInscrito = false;
         } elseif ($user->isAdmin()) {
             $historico = $livro->bookRequestItems()
                 ->with('bookRequest.user')
                 ->orderByDesc('created_at')
                 ->get();
+            $estaInscrito = false;
         } else {
             $historico = $livro->bookRequestItems()
                 ->whereHas('bookRequest', fn($q) => $q->where('user_id', $user->id))
                 ->with('bookRequest')
                 ->orderByDesc('created_at')
                 ->get();
+            
+            $estaInscrito = $livro->waitingList()
+                ->where('user_id', $user->id)
+                ->where('ativo', true)
+                ->exists();
         }
 
         $allReviews = $livro->reviews()->with('user')->get();
         $approvedReviews = $allReviews->where('status', 'ativo');
 
-        return view('livros.show', compact('livro', 'historico', 'totalRequisicoes', 'totalUsuarios', 'approvedReviews'));
+        return view('livros.show', compact('livro', 'historico', 'totalRequisicoes', 'totalUsuarios', 'approvedReviews', 'estaInscrito'));
     }
 
     public function pesquisarGoogleBooks(Request $request)
@@ -294,21 +304,30 @@ class LivroController extends Controller
 
     public function destroy(Livro $livro)
     {
-        $this->authorize('delete', $livro);
-
-        if ($livro->status === 'requisitado') {
-            return redirect()->back()->withErrors(['error' => 'Não é possível alterar o status de um livro requisitado.']);
-        }
-
-        if ($livro->status === 'disponivel') {
-            $livro->status = 'indisponivel';
-        } else {
-            $livro->status = 'disponivel';
-        }
-
+        $livro->status = $livro->status === 'disponivel' ? 'indisponivel' : 'disponivel';
         $livro->save();
 
-        return redirect()->back()->with('success', 'Status do livro atualizado com sucesso!');
+        if ($livro->status === 'disponivel') {
+            // Buscar usuários ativos na lista de espera desse livro
+            $inscritos = LivroWaitingList::with('user')
+                ->where('livro_id', $livro->id)
+                ->where('ativo', true)
+                ->get();
+
+            $usuarios = $inscritos->pluck('user')->filter();
+
+            // Enviar notificação para todos os usuários
+            Notification::send($usuarios, new LivroDisponivelNotification($livro));
+
+            // Marcar as inscrições como notificadas e inativas
+            foreach ($inscritos as $inscricao) {
+                $inscricao->ativo = false;
+                $inscricao->notificado_em = now();
+                $inscricao->save();
+            }
+        }
+
+        return back()->with('success', 'Status do livro atualizado e notificações enviadas!');
     }
 
 }

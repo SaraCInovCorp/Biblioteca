@@ -26,6 +26,17 @@
                         Requisitar este livro
                     </x-button>
                 @endif
+                @if(auth()->check() && !auth()->user()->isAdmin() && $livro->status === 'indisponivel' && !$estaInscrito)
+                    <x-button
+                        type="button"
+                        class="mt-4 w-full bg-blue-700 hover:bg-blue-400 text-white font-semibold py-2 px-4 rounded"
+                        onclick="inscreverListaEspera({{ $livro->id }})"
+                    >
+                        Avise-me quando disponível
+                    </x-button>
+                @elseif(auth()->check() && !auth()->user()->isAdmin() && $estaInscrito)
+                    <p class="mt-4 text-gray-600 font-medium text-center align-middle" style="width: 14rem;">Você já está inscrito para ser avisado quando este livro ficar disponível.</p>
+                @endif
                 @if(auth()->check() && auth()->user()->isAdmin())
                 <x-button type="button" onclick="window.location='{{ route('livros.edit', $livro->id) }}'" class="mt-4 w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded">
                     Editar
@@ -115,38 +126,65 @@
         </div>
         <script>
             function adicionarLivroEIrCriar(id, titulo, autor) {
-            console.log({id, titulo, autor}); 
+                console.log({id, titulo, autor});
 
-            fetch("{{ route('requisicoes.session.store') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json',
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({
-                    livro: {
-                        id: id,
-                        titulo: titulo,
-                        autor: autor
+                fetch("{{ route('requisicoes.session.store') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        livro: { id: id, titulo: titulo, autor: autor }
+                    }),
+                })
+                .then(async response => {
+                    if (!response.ok) {
+                        const data = await response.json().catch(() => ({}));
+                        throw new Error(data.error || 'Erro ao adicionar livro');
                     }
-                }),
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => { throw new Error(data.error || 'Erro ao adicionar livro'); });
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Livro adicionado:', data);
-                window.location.href = "{{ route('requisicoes.create') }}";
-            })
-            .catch(error => {
-                alert(error.message);
-            });
-        }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Livro adicionado:', data);
+                    window.location.href = "{{ route('requisicoes.create') }}";
+                })
+                .catch(error => {
+                    alert(`Erro: ${error.message}`);
+                    console.error('Falha ao adicionar livro:', error);
+                });
+            }
+
+
+            function inscreverListaEspera(livroId) {
+                fetch("{{ route('livro-waiting-list.store', ['livro' => '__id__']) }}".replace('__id__', livroId), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({}),
+                    credentials: 'same-origin',
+                })
+                .then(async response => {
+                    if (!response.ok) {
+                        const data = await response.json().catch(() => ({}));
+                        throw new Error(data.error || 'Erro ao inscrever');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert('Inscrição realizada com sucesso! Você será notificado quando o livro estiver disponível.');
+                    location.reload();
+                })
+                .catch(error => {
+                    alert(`Erro: ${error.message}`);
+                    console.error('Falha ao inscrever na lista de espera:', error);
+                });
+            }
 
         </script>
     </div>

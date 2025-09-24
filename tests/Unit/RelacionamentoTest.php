@@ -12,6 +12,7 @@ use App\Models\BookRequest;
 use App\Models\BookRequestItem;
 use App\Models\Importacao;
 use App\Models\BookReview;
+use App\Models\LivroWaitingList; 
 
 class RelacionamentoTest extends TestCase
 {
@@ -119,6 +120,47 @@ class RelacionamentoTest extends TestCase
         $this->assertTrue($livro->reviews->contains($review));
 
         $this->assertTrue($item->reviews->contains($review));
+    }
+
+    public function test_livro_waiting_list_relations_and_active_scope()
+    {
+        $user = User::factory()->create();
+        $livro = Livro::factory()->create();
+
+        // Cria inscrição ativa
+        $waiting = LivroWaitingList::create([
+            'livro_id' => $livro->id,
+            'user_id' => $user->id,
+            'ativo' => true,
+            'notificado_em' => null,
+        ]);
+
+        $waiting->refresh();
+
+        // Relações
+        $this->assertEquals($livro->id, $waiting->livro->id);
+        $this->assertEquals($user->id, $waiting->user->id);
+
+        // Testa inscrição ativa
+        $active = LivroWaitingList::where('ativo', true)
+            ->where('livro_id', $livro->id)
+            ->where('user_id', $user->id)
+            ->exists();
+
+        $this->assertTrue($active);
+
+        // Desativa inscrição
+        $waiting->ativo = false;
+        $waiting->notificado_em = now();
+        $waiting->save();
+
+        // Verifica que não está mais ativa
+        $inactive = LivroWaitingList::where('ativo', true)
+            ->where('livro_id', $livro->id)
+            ->where('user_id', $user->id)
+            ->exists();
+
+        $this->assertFalse($inactive);
     }
 
 }

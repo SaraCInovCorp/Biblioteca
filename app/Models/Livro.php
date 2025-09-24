@@ -13,6 +13,7 @@ use App\Models\Importacao;
 use App\Models\BookReview;
 use App\Models\BookRequestItem;
 use App\Models\BookRequest;
+use App\Models\LivroWaitingList;
 
 class Livro extends Model
 {
@@ -59,6 +60,11 @@ class Livro extends Model
     public function reviews()
     {
         return $this->hasMany(BookReview::class, 'livro_id');
+    }
+
+    public function waitingList()
+    {
+        return $this->hasMany(LivroWaitingList::class);
     }
 
 }

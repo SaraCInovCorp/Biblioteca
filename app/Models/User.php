@@ -12,6 +12,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\BookRequest;
 use App\Models\BookReview;
+use App\Models\LivroWaitingList;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -93,4 +94,11 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(BookReview::class, 'user_id');
     }
+
+    public function livrosAguardando()
+    {
+        return $this->hasMany(LivroWaitingList::class);
     }
+
+
+}
