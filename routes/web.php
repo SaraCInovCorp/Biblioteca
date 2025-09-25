@@ -42,6 +42,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('livros/import/search', [LivroImportController::class, 'searchGoogleBooks'])->name('livros.import.search');
     Route::get('livros/importados/list', [LivroImportController::class, 'listaImportados'])->name('livros.importados.list');
 
+    Route::get('waiting-list', [LivroWaitingListController::class, 'index'])->name('waiting-list.index');
     Route::post('livros/{livro}/waiting-list', [LivroWaitingListController::class, 'store'])->name('livro-waiting-list.store');
     
     Route::get('livros/create', [LivroController::class, 'create'])->name('livros.create');

@@ -347,6 +347,22 @@ class BookRequestController extends Controller
                         $livro->status = in_array($itemData['status'], ['realizada', 'nao_entregue']) ? $livro->status : 'disponivel';
                         $livro->save();
 
+                        if ($livro->wasChanged('status') && $livro->status === 'disponivel') {
+                            $inscritos = \App\Models\LivroWaitingList::with('user')
+                                ->where('livro_id', $livro->id)
+                                ->where('ativo', true)
+                                ->get();
+                            $usuarios = $inscritos->pluck('user')->filter();
+
+                            \Illuminate\Support\Facades\Notification::send($usuarios, new \App\Notifications\LivroDisponivelNotification($livro));
+                            
+                            foreach ($inscritos as $inscricao) {
+                                $inscricao->ativo = false;
+                                $inscricao->notificado_em = now();
+                                $inscricao->save();
+                            }
+                        }
+
                         $user = auth()->user();
                         if ($user->isCidadao() && in_array($itemData['status'], ['entregue_ok', 'entregue_obs'])) {
                             $reviewText = trim($itemData['review_text'] ?? '');

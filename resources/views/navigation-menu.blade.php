@@ -115,6 +115,12 @@
                                 @endif
 
                                 @if ($isAdmin)
+                                    <x-dropdown-link href="{{ route('waiting-list.index') }}">
+                                        {{ __('Lista de Interessados') }}
+                                    </x-dropdown-link>
+                                @endif
+
+                                @if ($isAdmin)
                                     <x-dropdown-link href="{{ route('livros.import.page') }}">
                                         {{ __('Importar Livros') }}
                                     </x-dropdown-link>

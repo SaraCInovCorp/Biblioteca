@@ -15,12 +15,26 @@ class LivroWaitingListController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $waitingList = LivroWaitingList::with('livro')
-            ->where('user_id', $user->id)
-            ->where('ativo', true)
-            ->get();
 
-        return view('livro_waiting_list.index', compact('waitingList'));
+        if ($user->isAdmin()) {
+            $livros = Livro::where('status', 'disponivel')
+                ->whereHas('waitingList', function ($q) {
+                    $q->where('ativo', true);
+                })
+                ->with(['waitingList' => function ($q) {
+                    $q->where('ativo', true)->with('user');
+                }])
+                ->get();
+
+            return view('waiting-list.index', compact('livros'));
+        } else {
+            $waitingList = LivroWaitingList::with('livro')
+                ->where('user_id', $user->id)
+                ->where('ativo', true)
+                ->get();
+
+            return view('waiting-list.index', compact('waitingList'));
+        }
     }
 
     /**
