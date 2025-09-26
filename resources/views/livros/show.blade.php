@@ -121,10 +121,85 @@
                         </p>
                     @endif
 
+                    @if($livrosRelacionados->isNotEmpty())
+                        <section id="livros-relacionados">
+                            @foreach($livrosRelacionados as $relacionado)
+                                <x-card-generic
+                                    :imageUrl="$relacionado->capa_url"
+                                    :title="$relacionado->titulo"
+                                    :description="Str::limit($relacionado->bibliografia, 120, '...')"
+                                    buttonText="Ver Detalhes"
+                                    :buttonUrl="route('livros.show', $relacionado->id)"
+                                    class="border rounded p-4 hover:shadow-lg transition mb-4"
+                                >
+                                    <p class="text-xs text-gray-500 mt-2">Similaridade: {{ number_format($relacionado->similaridade, 2) }}%</p>
+                                </x-card-generic>
+                            @endforeach
+                        </section>
+
+                        @if($livrosRelacionados->count() >= 2)
+                            <div class="text-center mt-6">
+                                <x-secondary-button id="btn-carregar-mais">Buscar mais relacionados</x-secondary-button>
+                            </div>
+                        @endif
+                    @endif
             </div>
-            
         </div>
         <script>
+            let paginaAtual = 2;
+            const livroId = "{{ $livro->id }}";
+            const btnCarregarMais = document.getElementById('btn-carregar-mais');
+            const containerRelacionados = document.getElementById('livros-relacionados');
+
+            btnCarregarMais.addEventListener('click', async () => {
+                btnCarregarMais.disabled = true;
+                btnCarregarMais.innerText = 'Carregando...';
+
+                try {
+                    const resposta = await fetch(`/livros/${livroId}/relacionados?page=${paginaAtual}`);
+                    const dados = await resposta.json();
+
+                    dados.livros.forEach(livro => {
+                        const card = document.createElement('div');
+                        card.classList.add('card', 'card-side', 'bg-base-100', 'shadow-sm', 'border', 'rounded', 'p-4', 'hover:shadow-lg', 'transition', 'mb-4');
+
+                        const imgUrl = livro.capa_url 
+                            ? (livro.capa_url.startsWith('http') ? livro.capa_url : `/storage/${livro.capa_url}`)
+                            : '';
+
+                        card.innerHTML = `
+                            <figure class="w-48 ${imgUrl ? '' : 'flex items-center justify-center bg-gray-100 rounded'}" style="min-height: 10rem;">
+                                ${imgUrl ? `<img src="${imgUrl}" alt="${livro.titulo}" style="object-fit:contain;max-height:160px;" />` : '<div class="text-gray-400 italic text-xs p-4">Sem capa</div>'}
+                            </figure>
+                            <div class="card-body">
+                                <h2 class="card-title">${livro.titulo}</h2>
+                                <p>${livro.bibliografia ? (livro.bibliografia.length > 120 ? livro.bibliografia.substring(0,120) + '...' : livro.bibliografia) : ''}</p>
+                                <p class="text-xs text-gray-500 mt-2">Similaridade: ${livro.similaridade.toFixed(2)}%</p>
+                                <div class="card-actions justify-end">
+                                    <a href="/livros/${livro.id}" class="btn btn-wide bg-gray-800 text-white hover:bg-gray-500 transition">
+                                        Ver Detalhes
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                        containerRelacionados.appendChild(card);
+                    });
+
+                    paginaAtual++;
+
+                    if (!dados.hasMore) {
+                        btnCarregarMais.style.display = 'none';
+                    } else {
+                        btnCarregarMais.disabled = false;
+                        btnCarregarMais.innerText = 'Buscar mais relacionados';
+                    }
+                } catch (error) {
+                    console.error(error);
+                    btnCarregarMais.disabled = false;
+                    btnCarregarMais.innerText = 'Buscar mais relacionados';
+                    alert('Erro ao carregar mais livros relacionados.');
+                }
+            });
             function adicionarLivroEIrCriar(id, titulo, autor) {
                 console.log({id, titulo, autor});
 

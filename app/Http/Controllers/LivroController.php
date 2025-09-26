@@ -191,6 +191,37 @@ class LivroController extends Controller
     {
         $livro->load(['autores', 'editora']);
 
+        function normalizeText($text) {
+            $text = mb_strtolower($text);
+            $text = preg_replace('/[^\p{L}\p{N}\s]/u', '', $text);
+            $text = preg_replace('/\b(da|de|do|e|a|o|que|em|no|na|por|para|com|um|uma|uns|umas)\b/u', '', $text);
+            $text = preg_replace('/\s+/', ' ', $text);
+            return trim($text);
+        }
+
+        $livroDesc = normalizeText($livro->bibliografia ?? '');
+
+        $outrosLivros = Livro::where('id', '!=', $livro->id)
+            ->whereNotNull('bibliografia')
+            ->where('bibliografia', '!=', '')
+            ->get();
+
+        $livrosRelacionados = $outrosLivros->map(function ($item) use ($livroDesc) {
+            $itemDesc = normalizeText($item->bibliografia ?? '');
+
+            similar_text($livroDesc, $itemDesc, $similaridade);
+
+            $palavrasLivro = explode(' ', $livroDesc);
+            $palavrasItem = explode(' ', $itemDesc);
+
+            $palavrasComuns = array_intersect($palavrasLivro, $palavrasItem);
+            $percentualPalavrasComuns = count($palavrasComuns) / max(count($palavrasLivro), 1) * 100;
+
+            $item->similaridade = 0.7 * $similaridade + 0.3 * $percentualPalavrasComuns;
+
+            return $item;
+        })->sortByDesc('similaridade')->take(2);
+
         $user = Auth::user();
 
         $totalRequisicoes = $livro->bookRequestItems()->count();
@@ -226,8 +257,55 @@ class LivroController extends Controller
         $allReviews = $livro->reviews()->with('user')->get();
         $approvedReviews = $allReviews->where('status', 'ativo');
 
-        return view('livros.show', compact('livro', 'historico', 'totalRequisicoes', 'totalUsuarios', 'approvedReviews', 'estaInscrito'));
+        return view('livros.show', compact('livro', 'historico', 'totalRequisicoes', 'totalUsuarios', 'approvedReviews', 'estaInscrito', 'livrosRelacionados'));
     }
+
+    public function buscarMaisRelacionados(Request $request, Livro $livro)
+    {
+        $page = max(1, (int) $request->query('page', 1));
+        $perPage = 2;
+
+        function normalizeText($text) {
+            $text = mb_strtolower($text);
+            $text = preg_replace('/[^\p{L}\p{N}\s]/u', '', $text);
+            $text = preg_replace('/\b(da|de|do|e|a|o|que|em|no|na|por|para|com|um|uma|uns|umas)\b/u', '', $text);
+            $text = preg_replace('/\s+/', ' ', $text);
+            return trim($text);
+        }
+
+        $livroDesc = normalizeText($livro->bibliografia ?? '');
+
+        $outrosLivros = Livro::where('id', '!=', $livro->id)
+            ->whereNotNull('bibliografia')
+            ->where('bibliografia', '!=', '')
+            ->get();
+
+        $livrosRelacionados = $outrosLivros->map(function ($item) use ($livroDesc) {
+            $itemDesc = normalizeText($item->bibliografia ?? '');
+
+            similar_text($livroDesc, $itemDesc, $similaridade);
+
+            $palavrasLivro = explode(' ', $livroDesc);
+            $palavrasItem = explode(' ', $itemDesc);
+
+            $palavrasComuns = array_intersect($palavrasLivro, $palavrasItem);
+            $percentualPalavrasComuns = count($palavrasComuns) / max(count($palavrasLivro), 1) * 100;
+
+            $item->similaridade = 0.7 * $similaridade + 0.3 * $percentualPalavrasComuns;
+
+            return $item;
+        })->sortByDesc('similaridade');
+
+        // Paginação manual
+        $paginated = $livrosRelacionados->slice(($page - 1) * $perPage, $perPage)->values();
+
+        return response()->json([
+            'livros' => $paginated,
+            'nextPage' => $page + 1,
+            'hasMore' => $livrosRelacionados->count() > $page * $perPage,
+        ]);
+    }
+
 
     public function pesquisarGoogleBooks(Request $request)
     {

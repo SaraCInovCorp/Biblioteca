@@ -135,15 +135,17 @@ Essas tabelas pivot garantem a flexibilidade para associar múltiplos autores e 
 
 ## Funcionalidades Principais
 
-- Gerenciamento completo de livros, autores e editoras.  
-- Pesquisas complexas com inúmeros filtros (por título, autor, status, data, usuário).  
-- Paginação eficiente utilizando o método `paginate` do Laravel.  
-- Exportação flexível para Excel e PDF.  
-- Sistema de requisição com limite para usuários cidadãos e gerenciamento de status.  
-- Criação de reviews pelos usuários vinculadas aos livros requisitados. 
-- Gestão administrativa de reviews: painel para que administradores possam visualizar, filtrar, alterar status e justificar alterações em reviews enviados por usuários.
-- Controle de acesso avançado via Laravel Jetstream com autenticação 2FA.  
-- Interfaces server-rendered modernas com Blade e componentes reutilizáveis.
+- Gerenciamento completo: Adicione, edite, pesquise e remova livros, autores e editoras por uma interface intuitiva, com relacionamentos automáticos entre entidades.  
+- Filtros e busca avançada: Realize pesquisas flexíveis filtrando por título, autor, editora, status, data de cadastro ou usuário requisitante, tornando a localização de registros ágil mesmo em grandes acervos.  
+- Paginação eficiente: Exibe os resultados de maneira responsiva e paginada, aproveitando o recurso nativo `paginate` do Laravel para melhor desempenho e experiência do usuário.  
+- Exportação de dados: Exporte listas de livros para Excel ou PDF, com suporte a filtros, imagens, layouts otimizados e geração personalizada por importação.  
+- Sistema de requisição: Usuários podem solicitar empréstimo de livros diretamente pelo sistema, com limites configuráveis para cidadãos e acompanhamento em tempo real do status das solicitações.  
+- Criação e gerenciamento de reviews: Usuários podem avaliar livros requisitados, enquanto administradores possuem painel dedicado para revisar, aprovar, filtrar, alterar status e justificar decisões sobre cada avaliação recebida. 
+- Lista de espera inteligente e notificações: Usuários podem se inscrever em listas de espera para livros indisponíveis e recebem notificações automáticas por email quando o item volta ao acervo, evitando notificações duplicadas.
+- Controle de acesso robusto: Sistema de autenticação via Laravel Jetstream, incluindo autenticação em dois fatores (2FA) e políticas detalhadas de permissão para cada perfil.
+- Interface moderna: Todas as telas são server-rendered utilizando Blade e componentização reutilizável, integrando Tailwind CSS/DaisyUI para experiência visual limpa e responsiva.  
+
+Essas funcionalidades garantem uma gestão profissional, moderna e segura para acervos de bibliotecas digitais ou físicas, trazendo automação e inteligência para operações do dia a dia do usuário e do administrador.
 
 ---
 
