@@ -30,6 +30,7 @@ class AutorController extends Controller
         $autores = Autor::when($query, function ($q) use ($query) {
             $q->where('nome', 'like', "%{$query}%");
         })
+        ->orderBy('nome', 'asc')
         ->paginate(12)
         ->appends($request->only('query'));
 

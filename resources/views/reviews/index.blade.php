@@ -46,7 +46,7 @@
                     </div>
                 @endif
                     @foreach($bookReviews as $bookReview)
-                    <div class="bg-white shadow rounded-lg p-4 flex flex-col gap-2 lg:flex-row lg:justify-between">
+                    <div class="bg-white shadow rounded-lg p-4 flex flex-col gap-2 lg:justify-between">
                         <div>
                             <div class="font-semibold text-lg text-blue-800 mb-1">
                                 {{ $bookReview->livro->titulo ?? 'Livro desconhecido' }}

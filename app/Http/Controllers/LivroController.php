@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Notification;
 class LivroController extends Controller
 {
     use AuthorizesRequests;
+
     public function index(Request $request)
     {
         $query = $request->input('query');        
@@ -41,6 +42,7 @@ class LivroController extends Controller
                     $q2->where('autores.id', $autorId);
                 });
             })
+            ->orderBy('titulo', 'asc')
             ->paginate(6)
             ->appends($request->only(['query', 'editora', 'autor'])); 
 

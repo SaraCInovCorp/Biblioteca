@@ -173,11 +173,14 @@ class BookRequestController extends Controller
         if ($user->role === 'cidadao') {
             $countReqLivros = BookRequestItem::whereHas('bookRequest', function ($q) use ($user) {
                 $q->where('user_id', $user->id)->where('ativo', true);
-            })->count();
+            })
+            ->whereIn('status', ['realizada', 'nao_entregue']) 
+            ->count();
 
             if ($countReqLivros + count($validated['items']) > 3) {
                 return back()->withErrors(['items' => 'Você já possui 3 livros requisitados em simultâneo.'])->withInput();
             }
+
         }
 
         foreach ($validated['items'] as $item) {
@@ -472,17 +475,34 @@ class BookRequestController extends Controller
     {
         $query = $request->get('q', '');
 
-        if(strlen($query) < 2){
+        if (strlen($query) < 2) {
             return response()->json([]);
         }
 
-        $livros = Livro::where('status', 'disponivel')
+        $livros = Livro::with(['autores:id,nome', 'editora:id,nome'])
+            ->where('status', 'disponivel')
             ->where(function ($q) use ($query) {
-                $q->where('titulo', 'like', "%{$query}%")
-                ->orWhere('autor', 'like', "%{$query}%");
+                $q
+                    ->where('titulo', 'like', "%{$query}%")
+                    ->orWhere('isbn', 'like', "%{$query}%")
+                    ->orWhereHas('autores', function ($qa) use ($query) {
+                        $qa->where('nome', 'like', "%{$query}%");
+                    })
+                    ->orWhereHas('editora', function ($qe) use ($query) {
+                        $qe->where('nome', 'like', "%{$query}%");
+                    });
             })
             ->limit(10)
-            ->get(['id', 'titulo', 'autor']);
+            ->get()
+            ->map(function ($livro) {
+                return [
+                    'id' => $livro->id,
+                    'titulo' => $livro->titulo,
+                    'autores' => $livro->autores->pluck('nome')->implode(', '),
+                    'editora' => $livro->editora ? $livro->editora->nome : null,
+                    'isbn' => $livro->isbn,
+                ];
+            });
 
         return response()->json($livros);
     }

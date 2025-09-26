@@ -107,7 +107,7 @@
 
         </div>
         <div class="mt-6 flex gap-3 justify-end">
-                <x-secondary-button onclick="window.history.back()">
+                <x-secondary-button as="a" href="{{ route('requisicoes.index') }}" class="hover:bg-red-700 hover:text-white ">
                     Voltar
                 </x-secondary-button>
                 @if($bookRequest->ativo && now()->lt($bookRequest->data_inicio))

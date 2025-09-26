@@ -24,6 +24,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 class EditoraController extends Controller
 {
     use AuthorizesRequests;
+
     public function index(Request $request)
     {
         $query = $request->input('query');
@@ -31,6 +32,7 @@ class EditoraController extends Controller
         $editoras = Editora::when($query, function ($q) use ($query) {
             $q->where('nome', 'like', "%{$query}%");
         })
+        ->orderBy('nome', 'asc')
         ->paginate(12)
         ->appends($request->only('query'));  
 

@@ -167,7 +167,7 @@
                 @endforeach
 
                 <div class="mt-6 flex justify-between gap-2">
-                    <x-secondary-button type="button" onclick="window.history.back()" class="hover:bg-red-700 hover:text-white">Cancelar</x-secondary-button>
+                    <x-secondary-button as="a" href="{{ route('requisicoes.index') }}" class="hover:bg-red-700 hover:text-white ">Cancelar</x-secondary-button>
                     <x-button type="submit" style="primary">Salvar alterações</x-button>
                 </div>
             </div>

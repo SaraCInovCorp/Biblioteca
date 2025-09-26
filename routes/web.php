@@ -45,9 +45,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('waiting-list', [LivroWaitingListController::class, 'index'])->name('waiting-list.index');
     Route::post('livros/{livro}/waiting-list', [LivroWaitingListController::class, 'store'])->name('livro-waiting-list.store');
     
+    Route::get('livros/search', [BookRequestController::class, 'searchLivros'])->name('livros.search');
     Route::get('livros/create', [LivroController::class, 'create'])->name('livros.create');
     Route::post('livros', [LivroController::class, 'store'])->name('livros.store');
-    Route::get('/livros/{livro}/relacionados', [LivroController::class, 'buscarMaisRelacionados'])->name('livros.relacionados');
     Route::get('livros/{livro}/edit', [LivroController::class, 'edit'])->name('livros.edit');
     Route::put('livros/{livro}', [LivroController::class, 'update'])->name('livros.update');
     Route::delete('livros/{livro}', [LivroController::class, 'destroy'])->name('livros.destroy');
@@ -89,8 +89,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     // Rotas para gerenciamento de reviews
     Route::get('reviews', [ReviewController::class, 'index'])->name('reviews.index');
     Route::post('reviews/bulk-update', [ReviewController::class, 'bulkUpdate'])->name('reviews.bulkUpdate');
-    Route::get('reviews/{bookReview}', [ReviewController::class, 'show'])->name('reviews.show');
     Route::get('reviews/{bookReview}/edit', [ReviewController::class, 'edit'])->name('reviews.edit');
+    Route::get('reviews/{bookReview}', [ReviewController::class, 'show'])->name('reviews.show');
     Route::put('reviews/{bookReview}', [ReviewController::class, 'update'])->name('reviews.update');
 
 
@@ -101,8 +101,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
 // Rotas públicas para livros, autores e editoras - apenas index e show
 Route::get('livros', [LivroController::class, 'index'])->name('livros.index');
+Route::get('/livros/{livro}/relacionados', [LivroController::class, 'buscarMaisRelacionados'])->name('livros.relacionados');
 Route::get('livros/{livro}', [LivroController::class, 'show'])->name('livros.show');
-Route::get('livros/search', [BookRequestController::class, 'searchLivros'])->name('livros.search');
 
 Route::get('autores', [AutorController::class, 'index'])->name('autores.index');
 Route::get('autores/{autor}', [AutorController::class, 'show'])->name('autores.show');
