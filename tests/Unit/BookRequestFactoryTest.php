@@ -5,6 +5,9 @@ namespace Tests\Unit;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\BookRequest;
+use App\Models\User;
+use Illuminate\Support\Facades\Schema;
+
 
 class BookRequestFactoryTest extends TestCase
 {

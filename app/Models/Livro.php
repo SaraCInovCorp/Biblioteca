@@ -14,6 +14,8 @@ use App\Models\BookReview;
 use App\Models\BookRequestItem;
 use App\Models\BookRequest;
 use App\Models\LivroWaitingList;
+use App\Models\CarrinhoItem;
+use App\Models\EncomendaItem;
 
 class Livro extends Model
 {
@@ -65,6 +67,16 @@ class Livro extends Model
     public function waitingList()
     {
         return $this->hasMany(LivroWaitingList::class);
+    }
+
+    public function carrinhoItems()
+    {
+        return $this->hasMany(CarrinhoItem::class, 'livro_id');
+    }
+
+    public function encomendaItems()
+    {
+        return $this->hasMany(EncomendaItem::class, 'livro_id');
     }
 
 }

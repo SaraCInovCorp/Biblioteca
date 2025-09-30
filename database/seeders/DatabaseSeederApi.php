@@ -19,6 +19,11 @@ class DatabaseSeederApi extends Seeder
             BookRequestSeeder::class,
             BookReviewSeeder::class,
             LivroWaitingListSeeder::class,
+            EnderecoSeeder::class,
+            CarrinhoSeeder::class,
+            CarrinhoItemSeeder::class,
+            EncomendaSeeder::class,
+            EncomendaItemSeeder::class,
         ]);
     }
 }

@@ -32,6 +32,9 @@
                         <span class="text-red-600 uppercase">{{ ucfirst($livro->status) }}</span>
                     @endif
                 </span>
+                <p class="text-sm mt-3">
+                    <span class="font-semibold">Preço: </span>{{ $livro->preco }}
+                </p>
             </div>
         </div>
     </div>

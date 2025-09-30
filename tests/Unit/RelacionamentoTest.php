@@ -8,15 +8,26 @@ use App\Models\Livro;
 use App\Models\Editora;
 use App\Models\Autor;
 use App\Models\User;
+use Illuminate\Support\Facades\Schema;
 use App\Models\BookRequest;
 use App\Models\BookRequestItem;
 use App\Models\Importacao;
 use App\Models\BookReview;
 use App\Models\LivroWaitingList; 
+use App\Models\Endereco;
+use App\Models\Carrinho;
+use App\Models\CarrinhoItem;
+use App\Models\Encomenda;
+use App\Models\EncomendaItem;
 
 class RelacionamentoTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_livros_table_exists()
+    {
+        $this->assertTrue(Schema::hasTable('livros'));
+    }
 
     public function test_livro_belongs_to_editora_and_has_authors()
     {
@@ -162,6 +173,44 @@ class RelacionamentoTest extends TestCase
 
         $this->assertFalse($inactive);
     }
+
+    public function test_user_can_have_multiple_enderecos()
+    {
+        $user = User::factory()->create();
+        $enderecos = Endereco::factory()->count(2)->create(['user_id' => $user->id]);
+
+        $user->refresh();
+        $this->assertCount(2, $user->enderecos);
+
+        foreach ($enderecos as $endereco) {
+            $this->assertTrue($user->enderecos->contains($endereco));
+        }
+    }
+
+    public function test_carrinho_belongs_to_user_and_has_items()
+    {
+        $user = User::factory()->create();
+        $carrinho = Carrinho::factory()->for($user)->create();
+        $livros = Livro::factory()->count(3)->create();
+
+        foreach ($livros as $livro) {
+            CarrinhoItem::factory()->create([
+                'carrinho_id' => $carrinho->id,
+                'livro_id' => $livro->id,
+            ]);
+        }
+
+        $carrinho->refresh();
+
+        $this->assertEquals($user->id, $carrinho->user->id);
+        $this->assertCount(3, $carrinho->items);
+
+        foreach ($carrinho->items as $item) {
+            $this->assertTrue($livros->contains($item->livro));
+        }
+    }
+
+
 
 }
 

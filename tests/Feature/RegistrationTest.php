@@ -6,6 +6,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Fortify\Features;
 use Laravel\Jetstream\Jetstream;
 use Tests\TestCase;
+use App\Models\User;
+use Illuminate\Support\Facades\Schema;
+
 
 class RegistrationTest extends TestCase
 {

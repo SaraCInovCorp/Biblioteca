@@ -5,6 +5,9 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
@@ -13,10 +16,15 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\BookRequest;
 use App\Models\BookReview;
 use App\Models\LivroWaitingList;
+use App\Models\Endereco;
+use App\Models\Carrinho;
+use App\Models\Encomenda;
+use Laravel\Jetstream\HasTeams;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens;
+    use HasTeams;
 
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory;
@@ -99,6 +107,22 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(LivroWaitingList::class);
     }
+
+    public function enderecos()
+    {
+        return $this->hasMany(Endereco::class, 'user_id');
+    }
+
+    public function carrinhos()
+    {
+        return $this->hasMany(Carrinho::class, 'user_id');
+    }
+
+    public function encomendas()
+    {
+        return $this->hasMany(Encomenda::class, 'user_id');
+    }
+
 
 
 }
