@@ -19,6 +19,7 @@ class DatabaseSeederFaker extends Seeder
             BookRequestSeeder::class,
             BookReviewSeeder::class,
             LivroWaitingListSeeder::class,
+            UserDocumentSeeder::class,
             EnderecoSeeder::class,
             CarrinhoSeeder::class,
             CarrinhoItemSeeder::class,

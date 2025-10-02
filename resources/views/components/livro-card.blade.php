@@ -1,6 +1,7 @@
 @php
     use Illuminate\Support\Str;
 @endphp
+
 <div class="card bg-base-100 shadow-sm border border-transparent hover:border-blue-800 group transition-colors duration-300">
     <div class="items-center text-center rounded-t-lg  flex flex-col">
         <div class="card-title  w-full  rounded-t-lg p-6 bg-gray-400 group-hover:text-blue-800 transition-colors duration-300 block">
@@ -11,6 +12,10 @@
             <div class="flex-shrink-0">
                 <img src="{{ Str::startsWith($livro->capa_url, ['http://', 'https://']) ? $livro->capa_url : asset('storage/' . $livro->capa_url) }}" 
      alt="Capa do livro {{ $livro->titulo }}" class="w-28 h-auto rounded-md">
+                <form method="POST" action="{{ route('carrinho.adicionar', ['livro' => $livro->id]) }}">
+                    @csrf
+                    <x-button-add-to-cart class="mt-4" />
+                </form>
             </div>
             <div class="text-left flex-1">
                 <div class="text-sm mt-4 text-justify text-gray-700">
@@ -32,9 +37,10 @@
                         <span class="text-red-600 uppercase">{{ ucfirst($livro->status) }}</span>
                     @endif
                 </span>
-                <p class="text-sm mt-3">
-                    <span class="font-semibold">Preço: </span>{{ $livro->preco }}
+                <p class="text-sm mt-3 text-blue-600">
+                    <span class="font-semibold">Preço: </span>€ {{ $livro->preco }}
                 </p>
+                
             </div>
         </div>
     </div>

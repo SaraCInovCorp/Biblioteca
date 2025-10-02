@@ -33,6 +33,23 @@
             </div>
 
             <div class="hidden sm:flex sm:items-center sm:ms-6 justify-end space-x-4 w-1/4">
+                {{-- Botão do Carrinho --}}
+                    @php
+                        $countItems = 0;
+                        if(auth()->check()) {
+                            $carrinho = \App\Models\Carrinho::where('user_id', auth()->id())
+                                        ->where('status', 'ativo')
+                                        ->first();
+                            if ($carrinho) {
+                                $countItems = $carrinho->items()->sum('quantidade');
+                            }
+                        } else {
+                            if(session()->has('carrinho')) {
+                                $countItems = array_sum(array_column(session('carrinho'), 'quantidade'));
+                            }
+                        }
+                    @endphp
+                    <x-button-view-cart :count="$countItems" aria-label="Ver Carrinho" />
                 @if(auth()->check())
                     <!-- Teams Dropdown -->
                     @if (Laravel\Jetstream\Jetstream::hasTeamFeatures())
@@ -87,80 +104,84 @@
                     @endif
                     <!-- Settings Dropdown -->
                     <div class="ms-3 relative">
-                        <x-dropdown align="right" width="48">
-                            <x-slot name="trigger">
-                                @auth
-                                    @if (Laravel\Jetstream\Jetstream::managesProfilePhotos())
-                                        <div class="shrink-0 me-3">
-                                            <img class="size-10 rounded-full object-cover" src="{{ Auth::user()->profile_photo_url }}" alt="{{ Auth::user()->name }}" />
-                                        </div>
+                        <div class="ms-3 relative flex items-center space-x-8">
+                            
+                            {{-- Foto do Perfil com Dropdown --}}
+                            <x-dropdown align="right" width="48">
+                                <x-slot name="trigger">
+                                    @auth
+                                        @if (Laravel\Jetstream\Jetstream::managesProfilePhotos())
+                                            <div class="shrink-0 me-3">
+                                                <img class="size-10 rounded-full object-cover" src="{{ Auth::user()->profile_photo_url }}" alt="{{ Auth::user()->name }}" />
+                                            </div>
+                                        @endif
+                                    @endauth
+                                </x-slot>
+
+                                <x-slot name="content">
+                                    <!-- Account Management -->
+                                    <div class="block px-4 py-2 text-xs text-gray-400">
+                                        {{ __('Manage Account') }}
+                                    </div>
+
+                                    <x-dropdown-link href="{{ route('users.show') }}">
+                                        {{ __('Perfil/Histórico') }}
+                                    </x-dropdown-link>
+
+                                    @if ($isAdmin)
+                                        <x-dropdown-link href="{{ route('reviews.index') }}">
+                                            {{ __('Gestão Reviews') }}
+                                        </x-dropdown-link>
                                     @endif
-                                @endauth
-                            </x-slot>
 
-                            <x-slot name="content">
-                                <!-- Account Management -->
-                                <div class="block px-4 py-2 text-xs text-gray-400">
-                                    {{ __('Manage Account') }}
-                                </div>
+                                    @if ($isAdmin)
+                                        <x-dropdown-link href="{{ route('waiting-list.index') }}">
+                                            {{ __('Lista de Interessados') }}
+                                        </x-dropdown-link>
+                                    @endif
 
-                                <x-dropdown-link href="{{ route('users.show') }}">
-                                    {{ __('Perfil/Histórico') }}
-                                </x-dropdown-link>
+                                    @if ($isAdmin)
+                                        <x-dropdown-link href="{{ route('livros.import.page') }}">
+                                            {{ __('Importar Livros') }}
+                                        </x-dropdown-link>
+                                    @endif
 
-                                @if ($isAdmin)
-                                    <x-dropdown-link href="{{ route('reviews.index') }}">
-                                        {{ __('Gestão Reviews') }}
+                                    @if ($isAdmin)
+                                        <x-dropdown-link href="{{ route('livros.importados.list') }}">
+                                            {{ __('Lista de Importações') }}
+                                        </x-dropdown-link>
+                                    @endif
+
+                                    @if ($isAdmin)
+                                        <x-dropdown-link href="{{ route('admin.register') }}">
+                                            {{ __('Registrar Admin') }}
+                                        </x-dropdown-link>
+                                    @endif
+
+                                    <x-dropdown-link href="{{ route('profile.show') }}">
+                                        {{ __('Profile') }}
                                     </x-dropdown-link>
-                                @endif
 
-                                @if ($isAdmin)
-                                    <x-dropdown-link href="{{ route('waiting-list.index') }}">
-                                        {{ __('Lista de Interessados') }}
-                                    </x-dropdown-link>
-                                @endif
+                                    @if (Laravel\Jetstream\Jetstream::hasApiFeatures())
+                                        <x-dropdown-link href="{{ route('api-tokens.index') }}">
+                                            {{ __('API Tokens') }}
+                                        </x-dropdown-link>
+                                    @endif
 
-                                @if ($isAdmin)
-                                    <x-dropdown-link href="{{ route('livros.import.page') }}">
-                                        {{ __('Importar Livros') }}
-                                    </x-dropdown-link>
-                                @endif
+                                    <div class="border-t border-gray-200 dark:border-gray-600"></div>
 
-                                @if ($isAdmin)
-                                    <x-dropdown-link href="{{ route('livros.importados.list') }}">
-                                        {{ __('Lista de Importações') }}
-                                    </x-dropdown-link>
-                                @endif
+                                    <!-- Authentication -->
+                                    <form method="POST" action="{{ route('logout') }}" x-data>
+                                        @csrf
 
-                                @if ($isAdmin)
-                                    <x-dropdown-link href="{{ route('admin.register') }}">
-                                        {{ __('Registrar Admin') }}
-                                    </x-dropdown-link>
-                                @endif
-
-                                <x-dropdown-link href="{{ route('profile.show') }}">
-                                    {{ __('Profile') }}
-                                </x-dropdown-link>
-
-                                @if (Laravel\Jetstream\Jetstream::hasApiFeatures())
-                                    <x-dropdown-link href="{{ route('api-tokens.index') }}">
-                                        {{ __('API Tokens') }}
-                                    </x-dropdown-link>
-                                @endif
-
-                                <div class="border-t border-gray-200 dark:border-gray-600"></div>
-
-                                <!-- Authentication -->
-                                <form method="POST" action="{{ route('logout') }}" x-data>
-                                    @csrf
-
-                                    <x-dropdown-link href="{{ route('logout') }}"
-                                            @click.prevent="$root.submit();">
-                                        {{ __('Log Out') }}
-                                    </x-dropdown-link>
-                                </form>
-                            </x-slot>
-                        </x-dropdown>
+                                        <x-dropdown-link href="{{ route('logout') }}"
+                                                @click.prevent="$root.submit();">
+                                            {{ __('Log Out') }}
+                                        </x-dropdown-link>
+                                    </form>
+                                </x-slot>
+                            </x-dropdown>
+                        </div>
                     </div>
                  @else
                  <!-- Links do menu principal quando não logado -->

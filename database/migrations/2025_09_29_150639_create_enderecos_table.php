@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('enderecos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->enum('tipo', ['pagamento', 'entrega'])->default('entrega');
+            $table->enum('tipo', ['pagamento', 'entrega'])->default('pagamento');
             $table->string('logradouro');
             $table->string('numero');
             $table->string('andereco')->nullable();

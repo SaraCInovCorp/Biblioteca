@@ -123,6 +123,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Encomenda::class, 'user_id');
     }
 
-
+    public function document()
+    {
+        return $this->hasOne(UserDocument::class);
+    }
 
 }

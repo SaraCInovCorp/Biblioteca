@@ -13,6 +13,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\LivroImportController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\LivroWaitingListController;
+use App\Http\Controllers\CarrinhoController;
+use App\Http\Controllers\CheckoutController;
 use App\Models\Livro;
 use App\Models\User;
 use App\Models\Autor;
@@ -26,7 +28,7 @@ Route::get('/', [HomeController::class, 'index'])->name('welcome');
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
 
     Route::get('dashboard', function () {
-        return view('dashboard');
+        return view('profile.show');
     })->name('dashboard');
 
     Route::get('admin/register', [AdminRegisterController::class, 'create'])->name('admin.register');
@@ -97,6 +99,14 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     //pesquisa de usuario
     Route::get('users/search', [BookRequestController::class, 'searchUsers'])->name('users.search');
     Route::get('users/{user?}', [UserController::class, 'show'])->name('users.show');
+
+    // Rotas para o checkout
+    Route::get('checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('checkout/processar', [CheckoutController::class, 'processar'])->name('checkout.processar');
+    Route::get('checkout/pagamento', [CheckoutController::class, 'showPaymentPage'])->name('checkout.pagamento');
+    Route::get('checkout/sucesso', [CheckoutController::class, 'success'])->name('checkout.sucesso');
+    Route::get('checkout/erro', [CheckoutController::class, 'error'])->name('checkout.erro');
+
 });
 
 // Rotas públicas para livros, autores e editoras - apenas index e show
@@ -110,6 +120,12 @@ Route::get('autores/{autor}', [AutorController::class, 'show'])->name('autores.s
 Route::get('editoras', [EditoraController::class, 'index'])->name('editoras.index');
 Route::get('editoras/{editora}', [EditoraController::class, 'show'])->name('editoras.show');
 
+ // Rotas para o carrinho
+Route::get('carrinho', [CarrinhoController::class, 'index'])->name('carrinho.index');
+Route::post('carrinho/adicionar/{livro}', [CarrinhoController::class, 'adicionar'])->name('carrinho.adicionar');
+Route::post('carrinho/atualizar/{item}', [CarrinhoController::class, 'atualizar'])->name('carrinho.atualizar');
+Route::post('carrinho/remover/{item}', [CarrinhoController::class, 'remover'])->name('carrinho.remover');
+
 Route::get('livros/export/excel', [LivroController::class, 'exportExcel'])->name('livros.export.excel');
 Route::get('livros/export/pdf', [LivroController::class, 'exportPdf'])->name('livros.export.pdf');
 
@@ -121,5 +137,7 @@ Route::get('autores/export/pdf', [AutorController::class, 'exportPdf'])->name('a
 
 Route::get('importacoes/{id}/export/excel', [LivroImportController::class, 'exportExcelPorImportacao'])->name('importacoes.export.excel');
 Route::get('importacoes/{id}/export/pdf', [LivroImportController::class, 'exportPdfPorImportacao'])->name('importacoes.export.pdf');
+
+
 
 

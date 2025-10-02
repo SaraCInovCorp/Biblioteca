@@ -19,6 +19,7 @@ use App\Models\Carrinho;
 use App\Models\CarrinhoItem;
 use App\Models\Encomenda;
 use App\Models\EncomendaItem;
+use App\Models\UserDocument;
 
 class RelacionamentoTest extends TestCase
 {
@@ -172,6 +173,41 @@ class RelacionamentoTest extends TestCase
             ->exists();
 
         $this->assertFalse($inactive);
+    }
+
+    public function test_user_has_one_document_and_fields_are_valid()
+    {
+        // Cria usuário
+        $user = User::factory()->create();
+
+        // Cria documentação do usuário
+        $document = UserDocument::factory()->create([
+            'user_id' => $user->id,
+            'data_nascimento' => '1990-01-01',
+            'tipo_documento' => 'CC',
+            'numero_documento' => '12345678',
+            'data_emissao' => '2015-01-01',
+            'data_validade' => '2025-01-01',
+            'entidade_emissora' => 'Conservatória Central',
+            'nacionalidade' => 'Portugal',
+            'genero' => 'Masculino',
+        ]);
+
+        $user->load('document');
+
+        // Testa se usuário tem documento
+        $this->assertNotNull($user->document);
+        $this->assertEquals($document->id, $user->document->id);
+
+        // Testa dados do documento
+        $this->assertEquals('1990-01-01', $user->document->data_nascimento->toDateString());
+        $this->assertEquals('CC', $user->document->tipo_documento);
+        $this->assertEquals('12345678', $user->document->numero_documento);
+        $this->assertEquals('2015-01-01', $user->document->data_emissao->toDateString());
+        $this->assertEquals('2025-01-01', $user->document->data_validade->toDateString());
+        $this->assertEquals('Conservatória Central', $user->document->entidade_emissora);
+        $this->assertEquals('Portugal', $user->document->nacionalidade);
+        $this->assertEquals('Masculino', $user->document->genero);
     }
 
     public function test_user_can_have_multiple_enderecos()
