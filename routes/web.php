@@ -15,6 +15,8 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\LivroWaitingListController;
 use App\Http\Controllers\CarrinhoController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\AdminPedidoController;
+use App\Http\Controllers\PedidoController;
 use App\Models\Livro;
 use App\Models\User;
 use App\Models\Autor;
@@ -107,6 +109,20 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('checkout/sucesso', [CheckoutController::class, 'success'])->name('checkout.sucesso');
     Route::get('checkout/erro', [CheckoutController::class, 'error'])->name('checkout.erro');
 
+    // Rotas para admin dos pedidos
+    Route::get('/admin/pedidos', [AdminPedidoController::class, 'index'])->name('admin.pedidos.index');
+    Route::get('/admin/pedidos/{pedido}', [AdminPedidoController::class, 'show'])->name('admin.pedidos.show');
+    Route::post('admin/pedidos/{pedido}/aprovar-cancelamento', [AdminPedidoController::class, 'aprovarCancelamento'])->name('admin.pedidos.aprovar-cancelamento');
+    Route::post('admin/pedidos/{pedido}/rejeitar-cancelamento', [AdminPedidoController::class, 'rejeitarCancelamento'])->name('admin.pedidos.rejeitar-cancelamento');
+    Route::delete('admin/pedidos/{pedido}/cancelar', [AdminPedidoController::class, 'cancelar'])->name('admin.pedidos.cancelar');
+
+
+    // Rotas para lista de pedidos para usuario
+    Route::get('pedidos/meus-pedidos', [PedidoController::class, 'meusPedidos'])->name('pedidos.meus');
+    Route::get('pedidos/meus-pedidos/{pedido}', [PedidoController::class, 'detalhePedido'])->name('pedidos.meus.detalhe');
+    Route::delete('pedidos/{pedido}/cancelar', [PedidoController::class, 'cancelarPedido'])->name('pedidos.cancelar');
+    Route::post('pedidos/{pedido}/solicitar-cancelamento', [PedidoController::class, 'solicitarCancelamento'])->name('pedidos.solicitar-cancelamento');
+
 });
 
 // Rotas públicas para livros, autores e editoras - apenas index e show
@@ -122,6 +138,7 @@ Route::get('editoras/{editora}', [EditoraController::class, 'show'])->name('edit
 
  // Rotas para o carrinho
 Route::get('carrinho', [CarrinhoController::class, 'index'])->name('carrinho.index');
+Route::post('carrinho/limpar', [CarrinhoController::class, 'limparCarrinho'])->name('carrinho.limpar');
 Route::post('carrinho/adicionar/{livro}', [CarrinhoController::class, 'adicionar'])->name('carrinho.adicionar');
 Route::post('carrinho/atualizar/{item}', [CarrinhoController::class, 'atualizar'])->name('carrinho.atualizar');
 Route::post('carrinho/remover/{item}', [CarrinhoController::class, 'remover'])->name('carrinho.remover');

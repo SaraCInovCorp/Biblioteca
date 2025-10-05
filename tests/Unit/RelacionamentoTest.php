@@ -177,10 +177,8 @@ class RelacionamentoTest extends TestCase
 
     public function test_user_has_one_document_and_fields_are_valid()
     {
-        // Cria usuário
         $user = User::factory()->create();
 
-        // Cria documentação do usuário
         $document = UserDocument::factory()->create([
             'user_id' => $user->id,
             'data_nascimento' => '1990-01-01',
@@ -195,11 +193,8 @@ class RelacionamentoTest extends TestCase
 
         $user->load('document');
 
-        // Testa se usuário tem documento
         $this->assertNotNull($user->document);
         $this->assertEquals($document->id, $user->document->id);
-
-        // Testa dados do documento
         $this->assertEquals('1990-01-01', $user->document->data_nascimento->toDateString());
         $this->assertEquals('CC', $user->document->tipo_documento);
         $this->assertEquals('12345678', $user->document->numero_documento);
@@ -245,8 +240,6 @@ class RelacionamentoTest extends TestCase
             $this->assertTrue($livros->contains($item->livro));
         }
     }
-
-
-
+    
 }
 

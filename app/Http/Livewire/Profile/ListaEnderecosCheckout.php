@@ -28,6 +28,7 @@ class ListaEnderecosCheckout extends Component
 
     public function atualizarLista()
     {
+        \Log::info('Evento enderecosAtualizados recebido - Atualizando lista');
         $this->carregarEnderecos();
     }
 
@@ -35,7 +36,8 @@ class ListaEnderecosCheckout extends Component
 
     public function updatedSelectedEnderecoId($value)
     {
-        $this->emitUp('enderecoSelecionado', $value);
+        \Log::info('Endereco selecionado: ' . $value);
+        $this->dispatch('enderecoSelecionado', enderecoId: $value);
     }
 
 

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\User;
 use App\Models\Endereco;
 use App\Models\EncomendaItem;
+use App\Models\Carrinho;
 
 class Encomenda extends Model
 {
@@ -16,7 +17,7 @@ class Encomenda extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'endereco_id', 'status', 'total', 'stripe_payment_intent_id', 'payment_status'
+        'user_id', 'endereco_id', 'carrinho_id', 'status', 'total', 'stripe_payment_intent_id', 'payment_status','cancelamento_solicitado','reembolso_aprovado'
     ];
 
     public function user()
@@ -32,6 +33,11 @@ class Encomenda extends Model
     public function items()
     {
         return $this->hasMany(EncomendaItem::class, 'encomenda_id');
+    }
+
+    public function carrinho()
+    {
+        return $this->belongsTo(Carrinho::class, 'carrinho_id');
     }
 
 }

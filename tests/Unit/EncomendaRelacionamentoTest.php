@@ -9,7 +9,7 @@ use App\Models\CarrinhoItem;
 use App\Models\Encomenda;
 use App\Models\EncomendaItem;
 use App\Models\User;
-use App\Models\Livro;         // << IMPORTAR ESSA CLASSE
+use App\Models\Livro; 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 
@@ -21,8 +21,13 @@ class EncomendaRelacionamentoTest extends TestCase
     {
         $user = User::factory()->create();
         $endereco = Endereco::factory()->for($user)->create();
+        $carrinho = Carrinho::factory()->for($user)->create();
 
-        $encomenda = Encomenda::factory()->for($user)->for($endereco)->create();
+        $encomenda = Encomenda::factory()
+            ->for($user)
+            ->for($endereco)
+            ->for($carrinho)
+            ->create();
 
         $livros = Livro::factory()->count(2)->create();
 
@@ -34,10 +39,12 @@ class EncomendaRelacionamentoTest extends TestCase
 
         $this->assertEquals($user->id, $encomenda->user->id);
         $this->assertEquals($endereco->id, $encomenda->endereco->id);
+        $this->assertEquals($carrinho->id, $encomenda->carrinho->id); 
         $this->assertCount(2, $encomenda->items);
 
         foreach ($encomenda->items as $item) {
             $this->assertTrue($livros->contains($item->livro));
         }
     }
+
 }

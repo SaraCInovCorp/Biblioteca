@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('endereco_id')->constrained('enderecos')->onDelete('cascade');
+            $table->foreignId('carrinho_id')->constrained()->onDelete('cascade');
             $table->enum('status', ['pendente', 'pago', 'cancelado', 'enviado', 'finalizado'])->default('pendente');
             $table->decimal('total', 10, 2);
             $table->string('stripe_payment_intent_id')->nullable()->index();

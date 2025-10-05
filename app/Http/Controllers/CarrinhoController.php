@@ -83,6 +83,25 @@ class CarrinhoController extends Controller
         return redirect()->route('carrinho.index');
     }
 
+    public function limparCarrinho(Request $request)
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return redirect()->route('carrinho.index')->with('error', 'Usuário não autenticado.');
+        }
+
+        $carrinho = Carrinho::where('user_id', $user->id)->where('status', 'ativo')->first();
+
+        if ($carrinho) {
+            $carrinho->items()->delete(); // Limpa os itens vinculados ao carrinho ativo
+        }
+
+        return redirect()->route('carrinho.index')->with('success', 'Carrinho limpo com sucesso.');
+    }
+
+
+
     public function remover(CarrinhoItem $item)
     {
         $item->delete();

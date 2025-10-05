@@ -4,6 +4,7 @@
     'description' => '',
     'buttonText' => '',
     'buttonUrl' => '',
+    'buttonClass' => 'btn btn-wide bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 hover:bg-gray-500 dark:hover:bg-white transition ease-in-out duration-300',
 ])
 
 @php
@@ -17,7 +18,7 @@
 <div {{ $attributes->merge(['class' => 'card card-side bg-base-100 shadow-sm']) }}>
     @if($imageUrl)
         <figure class="w-48 min-w-[12rem] min-h-[16rem] flex items-center justify-center bg-gray-100 rounded overflow-hidden">
-             @if($imageUrl)
+            @if($imageUrl)
                 <img src="{{ $imageUrl }}" alt="{{ $title }}" class="object-contain max-w-full max-h-full" />
             @else
                 <div class="text-gray-400 text-xs italic">Sem capa</div>
@@ -40,7 +41,7 @@
 
         @if($buttonText && $buttonUrl)
             <div class="card-actions justify-end">
-                <a href="{{ $buttonUrl }}" class="btn btn-wide bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 hover:bg-gray-500 dark:hover:bg-white transition ease-in-out duration-300">
+                <a href="{{ $buttonUrl }}" class="{{ $buttonClass }}">
                     {{ $buttonText }}
                 </a>
             </div>

@@ -39,17 +39,14 @@
       @endforeach
       </div>
     </div>
-
-    <!-- Linha 2: Formulário condicional (novo ou edição) -->
-    @if ($showForm)
-    @if($saved)
-    <div class="alert alert-success">Endereço salvo com sucesso!</div>
-    @endif
     @if ($successMessage)
       <div class="mb-4 text-green-600 font-semibold">
         {{ $successMessage }}
       </div>
     @endif
+    <!-- Linha 2: Formulário condicional (novo ou edição) -->
+    @if ($showForm)
+   
       <div class="col-span-6 bg-gray-50 rounded p-6 mx-auto">
                   <div class="col-span-2">
             <h3 class="text-lg font-bold mb-4">

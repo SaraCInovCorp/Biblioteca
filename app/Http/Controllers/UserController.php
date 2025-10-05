@@ -12,7 +12,6 @@ class UserController extends Controller
         $authUser = $request->user();
         $isAdmin = $authUser->isAdmin();
 
-        // Cidadão vê só próprio cadastro direto
         if (!$isAdmin) {
             $user = $authUser;
         } else {

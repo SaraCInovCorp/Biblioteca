@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->enum('status', ['ativo', 'finalizado', 'cancelado'])->default('ativo');
+            $table->timestamp('lembrete_enviado_em')->nullable();
+            $table->string('lembrete_enviado_para')->nullable();
             $table->timestamps();
         });
     }

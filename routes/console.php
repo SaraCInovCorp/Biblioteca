@@ -15,3 +15,6 @@ Artisan::command('inspire', function () {
 Schedule::command('app:atualizar-requisicoes-atrasadas')->dailyAt('00:05');
 
 Schedule::command('app:enviar-lembretes-requisicoes')->dailyAt('08:00');
+
+Schedule::command('app:enviar-lembretes-carrinhos-abandonados')->everyTenMinutes();
+

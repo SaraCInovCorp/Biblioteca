@@ -87,7 +87,7 @@ class ManageAddresses extends Component
         $this->editingAddressId = null;
         $this->state = [];
     }
-
+    
     public function saveAddress()
     {
         $validated = $this->validate([
@@ -138,7 +138,10 @@ class ManageAddresses extends Component
         $this->loadAddresses();
         $this->saved = true;
         $this->showForm = false;
-        $this->dispatch('enderecosAtualizados');
+        $this->successMessage = 'Endereço salvo com sucesso.';
+        \Log::info('Endereco salvo, é para disparar event enderecosAtualizados');
+        $this->dispatch('enderecosAtualizados', ['enderecos' => $this->addresses]);
+        
     }
 
     public function deleteAddress($id)
@@ -150,9 +153,10 @@ class ManageAddresses extends Component
         }
         $address->delete();
 
-        $this->dispatch('enderecosAtualizados');
-        $this->successMessage = 'Endereço excluído com sucesso.';
         $this->loadAddresses();
+        $this->successMessage = 'Endereço excluído com sucesso.';
+        $this->dispatch('enderecosAtualizados', ['enderecos' => $this->addresses]);
+        
     }
 
     public function render()

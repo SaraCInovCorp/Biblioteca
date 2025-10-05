@@ -123,6 +123,17 @@
                                     <div class="block px-4 py-2 text-xs text-gray-400">
                                         {{ __('Manage Account') }}
                                     </div>
+                                    @if (!$isAdmin)
+                                     <x-dropdown-link href="{{ route('pedidos.meus') }}">
+                                        {{ __('Meus Pedidos') }}
+                                    </x-dropdown-link>
+                                    @endif
+                                    
+                                    @if ($isAdmin)
+                                        <x-dropdown-link href="{{ route('admin.pedidos.index') }}">
+                                            {{ __('Gestão de Pedidos') }}
+                                        </x-dropdown-link>
+                                    @endif
 
                                     <x-dropdown-link href="{{ route('users.show') }}">
                                         {{ __('Perfil/Histórico') }}

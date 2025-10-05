@@ -15,7 +15,6 @@ class CarrinhoSeeder extends Seeder
     public function run(): void
     {
         User::all()->each(function ($user) {
-            // Cada usuário pode ter 1 carrinho ativo
             Carrinho::factory()->create([
                 'user_id' => $user->id,
                 'status' => 'ativo',

@@ -37,7 +37,7 @@
                         <form action="{{ route('carrinho.atualizar', ['item' => $item->id]) }}" method="POST" class="flex gap-2 items-center ">
                             @csrf
                             <x-input type="number" name="quantidade" value="{{ $item->quantidade }}" min="1" class="w-14 text-center" />
-                            <x-secondary-button type="submit" class="bg-blue-600 text-white hover:bg-blue-700">Atualizar</x-secondary-button>
+                            <x-secondary-button type="submit" class="bg-blue-900 text-white hover:bg-blue-900/70">Atualizar</x-secondary-button>
                         </form>
                     </div>
                     {{-- Preço unitário --}}
@@ -55,7 +55,7 @@
                         <span class="sm:hidden text-xs font-bold text-gray-400 block mb-1 px-2">Ações</span>
                         <form action="{{ route('carrinho.remover', ['item' => $item->id]) }}" method="POST">
                             @csrf
-                            <x-secondary-button type="submit" class="bg-red-600 text-white hover:bg-red-700">Remover</x-secondary-button>
+                            <x-secondary-button type="submit" class="bg-orange-500 text-white hover:bg-orange-500/50">Remover</x-secondary-button>
                         </form>
                     </div>
                 </div>
@@ -71,12 +71,18 @@
             </div>
         @endif
         @if (!$itens->isEmpty())
-            <div class="mt-6 text-right">
-                <x-button as="a" href="{{ route('checkout.index') }}"
-                    class="bg-green-600 text-white hover:bg-green-700">
+            <div class="mt-6 flex justify-end gap-4">
+                <form action="{{ route('carrinho.limpar') }}" method="POST" onsubmit="return confirm('Deseja realmente limpar todo o carrinho?');">
+                    @csrf
+                    <x-secondary-button type="submit" class="bg-red-600 text-white hover:bg-red-600/50">
+                        Limpar Carrinho
+                    </x-secondary-button>
+                </form>
+                <x-button as="a" href="{{ route('checkout.index') }}">
                     Finalizar compra
                 </x-button>
             </div>
         @endif
+
     </div>
 </x-app-layout>

@@ -19,9 +19,15 @@ class CarrinhoFactory extends Factory
      */
     public function definition(): array
     {
+        $createdAt = $this->faker->dateTimeBetween('-10 days', 'now');
+        $updatedAt = $this->faker->dateTimeBetween($createdAt, 'now');
         return [
             'user_id' => User::factory(),
             'status' => 'ativo',
+            'created_at' => $createdAt,
+            'updated_at' => $updatedAt,
+            'lembrete_enviado_em' => $this->faker->optional(0.15)->dateTimeBetween('-2 days', 'now'),
+            'lembrete_enviado_para' => $this->faker->optional(0.15)->safeEmail,
         ];
     }
 }

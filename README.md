@@ -144,6 +144,7 @@ Essas tabelas pivot garantem a flexibilidade para associar múltiplos autores e 
 - Lista de espera inteligente e notificações: Usuários podem se inscrever em listas de espera para livros indisponíveis e recebem notificações automáticas por email quando o item volta ao acervo, evitando notificações duplicadas.
 - Controle de acesso robusto: Sistema de autenticação via Laravel Jetstream, incluindo autenticação em dois fatores (2FA) e políticas detalhadas de permissão para cada perfil.
 - Interface moderna: Todas as telas são server-rendered utilizando Blade e componentização reutilizável, integrando Tailwind CSS/DaisyUI para experiência visual limpa e responsiva.  
+- Loja online integrada ao Stripe: carrinho, checkout, pagamento e histórico de compras.
 
 Essas funcionalidades garantem uma gestão profissional, moderna e segura para acervos de bibliotecas digitais ou físicas, trazendo automação e inteligência para operações do dia a dia do usuário e do administrador.
 
@@ -172,6 +173,26 @@ O sistema implementa um fluxo completo para o processo de requisição de livros
 
 - **Detalhamento:**  
   Visualização exibe dados do usuário (para admin), detalhes da requisição e lista de livros com informações específicas por item.
+
+---
+
+## Funcionalidade: Loja Online com Integração Stripe
+
+O sistema agora inclui um módulo completo de loja online integrado ao Stripe para processamento de pagamentos.
+
+- **Carrinho de Compras:** Usuário pode adicionar livros ao carrinho, atualizar quantidades e remover itens. Carrinho persistente por usuário autenticado.
+- **Checkout Guiado:** O fluxo de finalização de compra inclui escolha de endereço, resumo dos itens e confirmação antes do pagamento.
+- **Pagamento Seguro:** Integração com Stripe Payment Element, suportando cartão de crédito internacional, métodos locais (Bancontact, Klarna, etc.) e segurança completa do PCI Stripe.
+- **Status Atualizado:** Após o sucesso do pagamento, o status da encomenda é atualizado automaticamente como 'pago' e o carrinho é limpo/finalizado.
+- **Visualização de Pedidos:** Usuários podem visualizar o histórico de compras, detalhes de cada pedido (itens, valores e endereço).
+- **Tratamento de Pedidos Pendentes:** O sistema nunca sobrescreve encomendas antigas, criando sempre um novo pedido a cada compra. Encomendas não pagas permanecem como 'pendentes' e podem ser expurgadas periodicamente.
+
+### Benefícios
+
+- Checkout seguro e moderno.
+- Suporte a múltiplos métodos de pagamento.
+- Experiência fluida, transparente e confiável para o usuário.
+- Toda a lógica pronta para ambientes de produção (basta alterar as chaves Stripe e colocar HTTPS).
 
 ---
 
@@ -272,6 +293,150 @@ npm run build
 php artisan migrate
 
 ```
+---
+
+---
+
+## Como configurar Stripe para testes e desenvolvimento
+
+### 1. Instale a SDK Stripe no Laravel
+
+No terminal, execute:
+
+```
+composer require stripe/stripe-php
+```
+
+
+Essa dependência instala a API oficial do Stripe para PHP, usada para integrar e processar cobranças de forma segura e robusta.
+
+---
+
+### 2. Configure as credenciais no `.env`
+
+Acesse o painel do Stripe em [https://dashboard.stripe.com/test/apikeys](https://dashboard.stripe.com/test/apikeys), copie suas chaves de teste e adicione ao `.env` do Laravel:
+
+```
+STRIPE_KEY=pk_test_seuTokenAqui
+STRIPE_SECRET=sk_test_seuTokenAqui
+```
+
+
+Recarregue a aplicação após alterar o `.env`.
+
+---
+
+### 3. Requisitos para ambiente de testes
+
+- Em desenvolvimento, o Stripe permite uso em `http://localhost` ou dominios `.test`.
+- Para produção, é obrigatório usar HTTPS.
+
+---
+
+### 4. Realize pagamentos de teste
+
+Use os dados oficiais de cartão fornecidos pelo Stripe para simular compras (exemplo: 4000 0566 5566 5556, qualquer data/CCV).
+
+---
+
+### 5. Ative métodos de pagamento
+
+Pela dashboard Stripe, você pode ativar ou desativar métodos de pagamento locais (como Bancontact, Klarna, etc) conforme desejar.
+
+---
+
+### 6. Configuração frontend
+
+No Blade de pagamento, carregue o Stripe JS:
+
+```
+<script src="https://js.stripe.com/v3/"></script>
+```
+
+
+Garanta que a inicialização está passando o `clientSecret` gerado pelo backend:
+
+```
+const stripe = Stripe("{{ env('STRIPE_KEY') }}");
+const elements = stripe.elements({clientSecret: "{{ $clientSecret }}"});
+```
+
+A confirmação do pagamento é feita sempre passando o clientSecret recebido no controller.
+
+---
+
+### 7. Observações importantes
+
+- O webhook Stripe pode ser configurado posteriormente para processamento automático de pagamentos assíncronos. Em ambiente de teste, isso não é obrigatório para o fluxo básico (checkout + confirmação automática).
+- Em produção, é necessário registrar o domínio na Stripe e ativar métodos Apple Pay/Google Pay se for usar.
+
+---
+
+## Limpeza da Base Stripe para Ambiente de Teste
+
+Durante o desenvolvimento, é comum executar comandos como `php artisan migrate:fresh` para resetar a base de dados SQLite local. Contudo, a base de dados Stripe em modo teste pode acumular clientes, pagamentos e cobranças antigos que causam conflito ao executar novos testes.
+
+Para garantir validações corretas e evitar problemas com dados "presas" ou emails antigos aparecendo no Stripe, é necessário limpar a base Stripe de teste regularmente.
+
+### Como limpar a base Stripe de teste
+
+Este projeto inclui um comando Artisan especial para facilitar essa limpeza automática:
+
+```
+php artisan stripe:limpar-testdata
+```
+
+
+Esse comando executa as seguintes ações:
+
+- Cancela todos os PaymentIntents que ainda podem ser cancelados.
+- Reembolsa todas as cobranças (Charges) ativas na base de teste.
+- Remove todos os clientes (Customers) que forem deletáveis.
+
+### Importante
+
+- Execute esse comando **apenas em ambiente de desenvolvimento ou teste**, nunca em produção.
+- Caso você reinicie sua base SQLite local, execute a limpeza do Stripe para evitar inconsistência de ids de usuário e clientes.
+- O comando gerencia falhas comuns, como PaymentIntents já cancelados ou cobranças já reembolsadas, para dar feedback útil no terminal.
+
+---
+
+## Funcionalidade: Loja Online com Integração Stripe
+
+Este sistema possui um módulo completo de loja online, integrado ao Stripe para gerenciamento e processamento de pagamentos de forma segura e moderna.
+
+### Principais recursos implementados:
+
+- **Carrinho de Compras Dinâmico:**  
+Usuários autenticados podem adicionar livros ao carrinho, alterar quantidades e remover itens.  
+O carrinho é persistente, vinculado ao usuário, permitindo continuidade em sessões distintas.
+
+- **Checkout Guiado e Seguro:**  
+O fluxo de checkout inclui seleção de endereço de entrega, resumo completo dos itens e confirmação final antes do pagamento.  
+Utiliza o Stripe PaymentElement, que suporta múltiplos métodos de pagamento, incluindo cartões internacionais e métodos locais como Bancontact e Klarna.
+
+- **Processamento e Atualização de Pagamentos:**  
+Pagamentos são realizados via Stripe PaymentIntent, com associação clara do usuário autenticado e do pedido.  
+Após confirmação do pagamento, o sistema atualiza automaticamente o status do pedido para 'pago' e altera o carrinho para status finalizado.
+
+- **Visualização Completa de Pedidos:**  
+Usuários podem consultar o histórico de pedidos feitos, com detalhes completos de itens, valores e informações de endereço.
+
+- **Robustez no Controle de Pedidos:**  
+Cada novo pagamento gera uma nova encomenda, evitando sobrescrever pedidos pendentes ou históricos.  
+Pedidos com status pendente permanecem até serem pagos ou expurgados conforme regras administrativas.
+
+### Benefícios para o usuário e desenvolvedor
+
+- Experiência fluida e confiável para o cliente final, com UI moderna e responsiva.  
+- Segurança e conformidade garantidas pelo Stripe, incluindo suporte a múltiplos métodos de pagamento e proteção PCI.  
+- Facilidade de manutenção e testes, com comandos para resetar o ambiente Stripe em desenvolvimento.
+
+---
+
+
+Com esses passos, o sistema já estará preparado e seguro para processar pagamentos em modo desenvolvimento, sendo facilmente adaptável para produção apenas trocando as chaves no `.env` e colocando o domínio em HTTPS.
+
 ---
 
 ## Exportação

@@ -30,13 +30,17 @@ class CheckoutController extends Controller
 
     public function processar(Request $request)
     {
+        \Log::info('Payload do formulário:', $request->all());
         $request->validate([
             'endereco_id' => 'required|exists:enderecos,id',
         ]);
-        
+
         $user = auth()->user();
 
-        $carrinho = Carrinho::where('user_id', $user->id)->where('status', 'ativo')->with('items.livro')->first();
+        $carrinho = Carrinho::where('user_id', $user->id)
+                            ->where('status', 'ativo')
+                            ->with('items.livro')
+                            ->first();
 
         if (!$carrinho || $carrinho->items->isEmpty()) {
             return redirect()->route('carrinho.index')->withErrors('Seu carrinho está vazio.');
@@ -52,11 +56,13 @@ class CheckoutController extends Controller
 
             $encomenda = Encomenda::create([
                 'user_id' => $user->id,
+                'carrinho_id' => $carrinho->id,
                 'endereco_id' => $request->endereco_id,
                 'status' => 'pendente',
                 'total' => $total,
                 'payment_status' => 'pendente',
             ]);
+
 
             foreach ($carrinho->items as $item) {
                 EncomendaItem::create([
@@ -68,23 +74,46 @@ class CheckoutController extends Controller
             }
 
             Stripe::setApiKey(env('STRIPE_SECRET'));
-
-            $paymentIntent = PaymentIntent::create([
-                'amount' => intval($total * 100),
-                'currency' => 'eur',
-                'metadata' => [
-                    'encomenda_id' => $encomenda->id,
-                    'user_id' => $user->id,
-                ],
-            ]);
-
-            $encomenda->stripe_payment_intent_id = $paymentIntent->id;
-            $encomenda->save();
-
+            \Log::info('Email do usuário para PaymentIntent: ' . $user->email);
+            if ($encomenda->stripe_payment_intent_id) {
+                $paymentIntent = PaymentIntent::update(
+                    $encomenda->stripe_payment_intent_id,
+                    [
+                        'amount' => intval($total * 100),
+                        'currency' => 'eur',
+                        'metadata' => [
+                            'encomenda_id' => $encomenda->id,
+                            'user_id' => $user->id,
+                        ],
+                        'receipt_email' => $user->email,
+                    ]
+                );
+            } else {
+                $paymentIntent = PaymentIntent::create([
+                    'amount' => intval($total * 100),
+                    'currency' => 'eur',
+                    'metadata' => [
+                        'encomenda_id' => $encomenda->id,
+                        'user_id' => $user->id,
+                    ],
+                    'receipt_email' => $user->email,
+                ]);
+                $encomenda->stripe_payment_intent_id = $paymentIntent->id;
+                $encomenda->save();
+            }
+            \Log::info('Email do usuário para PaymentIntent: ' . $user->email);
             DB::commit();
-
-            return redirect()->route('checkout.pagamento', ['encomenda' => $encomenda->id, 'clientSecret' => $paymentIntent->client_secret]);
-
+            \Log::info('Antes do redirect', [
+                'encomenda_id' => $encomenda->id ?? null,
+                'client_secret' => $paymentIntent->client_secret ?? null,
+            ]);
+            if (empty($encomenda->id) || empty($paymentIntent->client_secret)) {
+                return redirect()->route('checkout.index')->withErrors('Erro ao processar pagamento: dados incompletos!');
+            }
+            return redirect()->route('checkout.pagamento', [
+                'encomenda' => $encomenda->id,
+                'clientSecret' => $paymentIntent->client_secret
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->route('checkout.index')->withErrors('Erro ao processar pedido: ' . $e->getMessage());
@@ -93,9 +122,57 @@ class CheckoutController extends Controller
 
     public function showPaymentPage(Request $request)
     {
+        \Log::info('Info depois do redirect:', [
+            'encomenda_id' => $request->encomenda ?? null,
+            'paymentIntent_client_secret' => $request->clientSecret ?? null,
+        ]);
+
         $clientSecret = $request->clientSecret;
-        return view('checkout.pagamento', compact('clientSecret'));
+        $encomendaId = $request->encomenda;
+        
+        $encomenda = Encomenda::with(['items.livro', 'endereco'])->find($encomendaId);
+
+        if (!$encomenda) {
+            abort(404, 'Encomenda não encontrada');
+        }
+
+        \Log::info('Info encomenda carregada:', [
+            'encomenda' => $encomenda ?? null,
+            'clientSecret' => $clientSecret ?? null,
+        ]);
+
+        return view('checkout.pagamento', compact('clientSecret', 'encomenda'));
     }
 
+    public function success(Request $request)
+    {
+        $paymentIntentId = $request->get('payment_intent');
+        $user = auth()->user();
+
+        if ($paymentIntentId) {
+            $encomenda = Encomenda::where('stripe_payment_intent_id', $paymentIntentId)->first();
+            if ($encomenda) {
+                $encomenda->payment_status = 'pago';
+                $encomenda->status = 'finalizado';
+                $encomenda->save();
+            }
+        }
+
+        $carrinho = Carrinho::where('user_id', $user->id)
+            ->where('status', 'ativo')
+            ->first();
+        if ($carrinho) {
+            $carrinho->items()->delete(); 
+            $carrinho->status = 'finalizado';
+            $carrinho->save();
+        }
+
+        return view('checkout.sucesso');
+    }
+
+    public function error()
+    {
+        return view('checkout.erro');
+    }
 
 }
