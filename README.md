@@ -176,26 +176,6 @@ O sistema implementa um fluxo completo para o processo de requisição de livros
 
 ---
 
-## Funcionalidade: Loja Online com Integração Stripe
-
-O sistema agora inclui um módulo completo de loja online integrado ao Stripe para processamento de pagamentos.
-
-- **Carrinho de Compras:** Usuário pode adicionar livros ao carrinho, atualizar quantidades e remover itens. Carrinho persistente por usuário autenticado.
-- **Checkout Guiado:** O fluxo de finalização de compra inclui escolha de endereço, resumo dos itens e confirmação antes do pagamento.
-- **Pagamento Seguro:** Integração com Stripe Payment Element, suportando cartão de crédito internacional, métodos locais (Bancontact, Klarna, etc.) e segurança completa do PCI Stripe.
-- **Status Atualizado:** Após o sucesso do pagamento, o status da encomenda é atualizado automaticamente como 'pago' e o carrinho é limpo/finalizado.
-- **Visualização de Pedidos:** Usuários podem visualizar o histórico de compras, detalhes de cada pedido (itens, valores e endereço).
-- **Tratamento de Pedidos Pendentes:** O sistema nunca sobrescreve encomendas antigas, criando sempre um novo pedido a cada compra. Encomendas não pagas permanecem como 'pendentes' e podem ser expurgadas periodicamente.
-
-### Benefícios
-
-- Checkout seguro e moderno.
-- Suporte a múltiplos métodos de pagamento.
-- Experiência fluida, transparente e confiável para o usuário.
-- Toda a lógica pronta para ambientes de produção (basta alterar as chaves Stripe e colocar HTTPS).
-
----
-
 ## Testes e População de Dados
 
 - Factories configuradas para gerar dados realistas para livros, editoras e autores.  
