@@ -135,23 +135,48 @@ class ManageAddresses extends Component
             }
         }
 
+        activity()
+        ->causedBy($user)
+        ->performedOn($address)
+        ->withProperties([
+            'ip' => request()->ip(),
+            'browser' => request()->header('User-Agent'),
+            'changes' => $address->getChanges(),
+        ])
+        ->event('address_saved')
+        ->log('Endereço salvo ou atualizado.');
+
+
         $this->loadAddresses();
         $this->saved = true;
         $this->showForm = false;
         $this->successMessage = 'Endereço salvo com sucesso.';
-        \Log::info('Endereco salvo, é para disparar event enderecosAtualizados');
         $this->dispatch('enderecosAtualizados', ['enderecos' => $this->addresses]);
         
     }
 
     public function deleteAddress($id)
     {
+        $user = auth()->user();
         $address = auth()->user()->enderecos()->find($id);
         if (!$address) {
             $this->addError('general', 'Endereço não encontrado ou autorizado.');
             return;
         }
+
+        $addressInfo = $address->toArray();
         $address->delete();
+
+        activity()
+        ->causedBy($user)
+        ->withProperties([
+            'ip' => request()->ip(),
+            'browser' => request()->header('User-Agent'),
+            'address' => $addressInfo,
+        ])
+        ->event('address_deleted')
+        ->log('Endereço excluído.');
+
 
         $this->loadAddresses();
         $this->successMessage = 'Endereço excluído com sucesso.';

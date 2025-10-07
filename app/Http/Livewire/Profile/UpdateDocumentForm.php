@@ -47,7 +47,20 @@ class UpdateDocumentForm extends Component
         $doc = $user->document ?? new UserDocument(['user_id' => $user->id]);
 
         $doc->fill($this->state);
+    
         $doc->save();
+
+        
+        activity()
+        ->causedBy($user)
+        ->performedOn($doc)
+        ->withProperties([
+            'ip' => request()->ip(),
+            'browser' => request()->header('User-Agent'),
+            'changes' => $doc->getChanges(),
+        ])
+        ->event('document_updated')
+        ->log('Documentação do usuário atualizada.');
 
         $this->saved = true;
     }

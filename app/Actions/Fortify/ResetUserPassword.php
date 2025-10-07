@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\ResetsUserPasswords;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Auth\Events\PasswordReset;
 
 class ResetUserPassword implements ResetsUserPasswords
 {
@@ -25,5 +27,7 @@ class ResetUserPassword implements ResetsUserPasswords
         $user->forceFill([
             'password' => Hash::make($input['password']),
         ])->save();
+        event(new PasswordReset($user));
+        \Log::info('Disparou evento PasswordReset para usuário ID: '.$user->id);
     }
 }

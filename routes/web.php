@@ -17,6 +17,10 @@ use App\Http\Controllers\CarrinhoController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\AdminPedidoController;
 use App\Http\Controllers\PedidoController;
+use Laravel\Fortify\Http\Controllers\ConfirmedPasswordStatusController;
+use Laravel\Fortify\Http\Controllers\PasswordResetLinkController;
+use Laravel\Fortify\Http\Controllers\EmailVerificationNotificationController;
+use Laravel\Fortify\Http\Controllers\TwoFactorAuthenticatedSessionController;
 use App\Models\Livro;
 use App\Models\User;
 use App\Models\Autor;
@@ -25,6 +29,30 @@ use App\Models\AutorLivro;
 use App\Models\Bookrequest;
 
 Route::get('/', [HomeController::class, 'index'])->name('welcome');
+
+//Rotas Fortify para funcionalidades de redefinição de senha, verificação e 2FA, com middlewares de auditoria
+Route::get('/user/confirmed-password-status', [ConfirmedPasswordStatusController::class, 'show'])
+    ->middleware(['auth'])
+    ->name('password.confirmation.status');
+
+Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+    ->middleware(['guest', 'log.password.reset.link'])
+    ->name('password.email');
+
+Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+    ->middleware(['auth', 'log.verification.link'])
+     ->name('verification.send');
+
+// Route::middleware(['guest'])->group(function () {
+//     // Exibe o formulário para o usuário digitar o código 2FA
+//     Route::get('/two-factor-challenge', [TwoFactorChallengeController::class, 'create'])
+//         ->name('two-factor.login');
+
+//     // Processa o código 2FA (enviado via POST do formulário)
+//     Route::post('/two-factor/login', [TwoFactorAuthenticatedSessionController::class, 'store'])
+//         ->middleware('log.twofactor.authentication') // Aplica o middleware de logging aqui
+//         ->name('two-factor.login.store');
+// });
 
 // Rotas protegidas para criação, edição, exclusão, etc.
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
@@ -154,7 +182,4 @@ Route::get('autores/export/pdf', [AutorController::class, 'exportPdf'])->name('a
 
 Route::get('importacoes/{id}/export/excel', [LivroImportController::class, 'exportExcelPorImportacao'])->name('importacoes.export.excel');
 Route::get('importacoes/{id}/export/pdf', [LivroImportController::class, 'exportPdfPorImportacao'])->name('importacoes.export.pdf');
-
-
-
 

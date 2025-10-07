@@ -36,6 +36,16 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
                 'email' => $input['email'],
             ])->save();
         }
+        activity()
+        ->causedBy($user)
+        ->withProperties([
+            'ip' => request()->ip(),
+            'browser' => request()->header('User-Agent'),
+            'changes' => $user->getChanges(),
+        ])
+        ->event('profile_updated')
+        ->log('Informações de perfil atualizadas.');
+
     }
 
     /**
@@ -52,5 +62,16 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
         ])->save();
 
         $user->sendEmailVerificationNotification();
+
+        activity()
+        ->causedBy($user)
+        ->withProperties([
+            'ip' => request()->ip(),
+            'browser' => request()->header('User-Agent'),
+            'changes' => $user->getChanges(),
+        ])
+        ->event('profile_updated_verified')
+        ->log('Informações de perfil atualizadas e email re-verificado.');
+
     }
 }
