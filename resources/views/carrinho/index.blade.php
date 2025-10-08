@@ -34,11 +34,25 @@
                     {{-- Quantidade --}}
                     <div class="sm:w-28 md:px-4 sm:py-3 flex items-center justify-center ">
                         <span class="sm:hidden text-xs font-bold text-gray-400 block mb-1 px-2">Qtd.</span>
-                        <form action="{{ route('carrinho.atualizar', ['item' => $item->id]) }}" method="POST" class="flex gap-2 items-center ">
-                            @csrf
-                            <x-input type="number" name="quantidade" value="{{ $item->quantidade }}" min="1" class="w-14 text-center" />
-                            <x-secondary-button type="submit" class="bg-blue-900 text-white hover:bg-blue-900/70">Atualizar</x-secondary-button>
-                        </form>
+                        @if(auth()->check())
+                            <form method="POST" action="{{ route('carrinho.atualizar', ['item' => $item->id]) }}" class="flex gap-2 items-center">
+                                @csrf
+                                @method('PUT')
+                                <x-input type="number" name="quantidade" value="{{ $item->quantidade }}" min="1" required class="w-14 text-center" />
+                                <x-secondary-button type="submit" class="bg-blue-900 text-white hover:bg-blue-900/70">
+                                    Atualizar
+                                </x-secondary-button>
+                            </form>
+                        @else
+                            <form method="POST" action="{{ route('carrinho.atualizar.sessao') }}" class="flex gap-2 items-center">
+                                @csrf
+                                <input type="hidden" name="livro_id" value="{{ $item->livro->id }}">
+                                <x-input type="number" name="quantidade" value="{{ $item->quantidade }}" min="1" required class="w-14 text-center" />
+                                <x-secondary-button type="submit" class="bg-blue-900 text-white hover:bg-blue-900/70">
+                                    Atualizar
+                                </x-secondary-button>
+                            </form>
+                        @endif
                     </div>
                     {{-- Preço unitário --}}
                     <div class="sm:w-32 sm:px-4 sm:py-3 flex items-center justify-center text-center">
@@ -53,10 +67,24 @@
                     {{-- Ações --}}
                     <div class="sm:w-28 sm:px-4 sm:py-3 flex items-center justify-center text-center ">
                         <span class="sm:hidden text-xs font-bold text-gray-400 block mb-1 px-2">Ações</span>
-                        <form action="{{ route('carrinho.remover', ['item' => $item->id]) }}" method="POST">
-                            @csrf
-                            <x-secondary-button type="submit" class="bg-orange-500 text-white hover:bg-orange-500/50">Remover</x-secondary-button>
-                        </form>
+                        @if(auth()->check())
+                            <form action="{{ route('carrinho.remover', ['item' => $item->id]) }}" method="POST" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <x-secondary-button type="submit" class="bg-orange-500 text-white hover:bg-orange-500/50">
+                                    Remover
+                                </x-secondary-button>
+                            </form>
+                        @else
+                            <form action="{{ route('carrinho.remover.sessao') }}" method="POST" class="inline">
+                                @csrf
+                                <input type="hidden" name="livro_id" value="{{ $item->livro->id }}">
+                                <x-secondary-button type="submit" class="bg-orange-500 text-white hover:bg-orange-500/50">
+                                    Remover
+                                </x-secondary-button>
+                            </form>
+                        @endif
+
                     </div>
                 </div>
 

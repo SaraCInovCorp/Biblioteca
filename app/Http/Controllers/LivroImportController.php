@@ -11,25 +11,51 @@ use Illuminate\Support\Facades\Http;
 use App\Models\Importacao;
 use Illuminate\Support\Facades\DB;
 use PDF;
+use Illuminate\Support\Facades\Auth;
 use App\Exports\LivrosExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Spatie\Activitylog\Models\Activity;
 
 class LivroImportController extends Controller
 {
-    public function exportPdfPorImportacao($importacaoId)
+    public function exportPdfPorImportacao(Request $request, $importacaoId)
     {
         $importacao = Importacao::with('livros')->findOrFail($importacaoId);
         $livros = $importacao->livros;
 
         $pdf = PDF::loadView('livros.export_pdf', ['livros' => $livros]);
 
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($importacao)
+            ->event('exportpdfimportacao')
+            ->useLog('exportpdfimportacao-livro')
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+                'livros_ids' => $livros->pluck('id')->toArray(),
+            ])
+            ->log('Exportação PDF por importação');
+
         return $pdf->download('importacao_'.$importacaoId.'_livros.pdf');
     }
 
-    public function exportExcelPorImportacao($importacaoId)
+    public function exportExcelPorImportacao(Request $request, $importacaoId)
     {
         $importacao = Importacao::with('livros')->findOrFail($importacaoId);
         $livroIds = $importacao->livros->pluck('id')->toArray();
+
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($importacao)
+            ->event('exportexcelfimportacao')
+            ->useLog('exportexcelimportacao-livro')
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+                'livros_ids' => $livroIds,
+            ])
+            ->log('Exportação Excel por importação');
 
         return Excel::download(new LivrosExport(null, null, null, $livroIds), 'importacao_'.$importacaoId.'_livros.xlsx');
     }
@@ -56,25 +82,51 @@ class LivroImportController extends Controller
     {
         $this->authorize('create', Livro::class);
 
-       $query = $request->query('q');
+        $query = $request->query('q');
         if (!$query) {
             return response()->json(['error' => 'Parâmetro de busca obrigatório'], 400);
         }
 
-        $startIndex = (int) $request->query('startIndex', 0);
+        $startIndex = max(0, (int) $request->query('startIndex', 0)); // Garante >=0
+        $maxResults = 40;
+
+        // Garante que não vai ultrapassar 1000 resultados (limite do Google)
+        if ($startIndex + $maxResults > 1000) {
+            return response()->json(['error' => 'Limite máximo de resultados/índice atingido'], 422);
+        }
 
         $response = Http::get('https://www.googleapis.com/books/v1/volumes', [
             'q' => $query,
-            'maxResults' => 40,
-            'orderBy' => 'relevance',    
-            'langRestrict' => 'pt', 
-            'printType' => 'books', 
+            'maxResults' => $maxResults,
+            'orderBy' => 'relevance',
+            'langRestrict' => 'pt',
+            'printType' => 'books',
             'startIndex' => $startIndex,
         ]);
 
         if ($response->failed()) {
-            return response()->json(['error' => 'Erro ao consultar Google Books'], 500);
+            // Log completo para debug
+            \Log::error('Erro Google Books:', [
+                'url' => $response->effectiveUri(),
+                'query' => $query,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            return response()->json(['error' => 'Erro ao consultar Google Books', 'mensagem' => $response->body()], 500);
         }
+
+        activity()
+            ->causedBy(auth()->user())
+            ->event('searchgooglebooks')
+            ->useLog('searchgooglebooks-livro')
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+                'query' => $query,
+                'startIndex' => $startIndex,
+                'status' => $response->status(),
+            ])
+            ->log('Busca Google Books API');
 
         return $response->json();
     }
@@ -156,9 +208,36 @@ class LivroImportController extends Controller
                 $importacao->autores()->syncWithoutDetaching($autorIds);
 
                 $importadosIds[] = $livro->id;
+
+                activity()
+                    ->causedBy(Auth::user())
+                    ->performedOn($livro)
+                    ->event('importselected')
+                    ->useLog('importselected-livro')
+                    ->withProperties([
+                        'ip' => $request->ip(),
+                        'user_agent' => $request->header('User-Agent'),
+                        'importacao_id' => $importacao->id,
+                    ])
+                    ->log('Livro importado via API Google Books');
+
                 Log::info('Livro importado: ', ['livro_id' => $livro->id]);
             }
             DB::commit();
+
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($importacao)
+                ->event('importselected')
+                ->useLog('importselected-livro')
+                ->withProperties([
+                    'ip' => $request->ip(),
+                    'user_agent' => $request->header('User-Agent'),
+                    'livros_importados' => $importadosIds,
+                    'livros_nao_importados' => $naoImportados,
+                ])
+                ->log('Importação de livros concluída');
+
         } catch (\Exception $e) {
             DB::rollBack();
             return $this->showImportPage()->withErrors('Erro ao importar livros: ' . $e->getMessage());
@@ -197,6 +276,17 @@ class LivroImportController extends Controller
         $livros = $importacao->livros;
         $ultimaImportacao = $importacao;
 
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($importacao)
+            ->event('importacaodetalhes')
+            ->useLog('importacaodetalhes-livro')
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+            ])
+            ->log('Visualização da importação detalhada');
+
         return view('livros.import', compact('importacoes', 'livros', 'ultimaImportacao'));
     }
 
@@ -221,6 +311,16 @@ class LivroImportController extends Controller
 
         $livros = $ultimaImportacao ? $ultimaImportacao->livros : collect();
 
+        activity()
+            ->causedBy(Auth::user())
+            ->event('listaimportados')
+            ->useLog('listaimportados-livro')
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+            ])
+            ->log('Visualização da lista de importações');
+        
         return view('livros.importados-lista', compact('importacoes', 'ultimaImportacao', 'livros'));
     }
 

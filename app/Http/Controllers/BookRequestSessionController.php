@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Spatie\Activitylog\Models\Activity;
 
 class BookRequestSessionController extends Controller
 {

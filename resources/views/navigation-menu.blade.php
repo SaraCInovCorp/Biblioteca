@@ -135,6 +135,12 @@
                                         </x-dropdown-link>
                                     @endif
 
+                                    @if ($isAdmin)
+                                        <x-dropdown-link href="{{ route('admin.activity-logs.index') }}">
+                                            {{ __('Gestão de Logs') }}
+                                        </x-dropdown-link>
+                                    @endif
+
                                     <x-dropdown-link href="{{ route('users.show') }}">
                                         {{ __('Perfil/Histórico') }}
                                     </x-dropdown-link>

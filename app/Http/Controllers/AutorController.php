@@ -19,6 +19,7 @@ use App\Exports\AutoresExport;
 use Maatwebsite\Excel\Facades\Excel;
 use PDF;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Spatie\Activitylog\Models\Activity;
 
 class AutorController extends Controller
 {
@@ -77,6 +78,15 @@ class AutorController extends Controller
     {
         $fileName = 'autores_' . now()->format('Ymd_His') . '.xlsx';
 
+        activity()
+        ->causedBy(auth()->user())
+        ->withProperties([
+            'ip' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+            'query' => $request->query('query'),
+        ])
+        ->log('Exportação Excel de autores');
+
         return (new AutoresExport($request->query('query')))->download($fileName);
     }
 
@@ -87,6 +97,15 @@ class AutorController extends Controller
 
         $pdf = PDF::loadView('autores.export_pdf', compact('autores'))
             ->setPaper('a4', 'landscape');
+
+        activity()
+        ->causedBy(auth()->user())
+        ->withProperties([
+            'ip' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+            'query' => $request->query('query'),
+        ])
+        ->log('Exportação PDF de autores');
 
         return $pdf->download('autores_' . now()->format('Ymd_His') . '.pdf');
     }
@@ -108,16 +127,36 @@ class AutorController extends Controller
 
         $autor->update($validated);
 
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($autor)
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+                'attributes' => $autor->getChanges(),
+                'old' => $autor->getOriginal(),
+            ])
+            ->log('Autor atualizado');
+
         return redirect()->route('autores.index')->with('success', 'Autor atualizado com sucesso.');
     }
 
-    public function destroy(Autor $autor)
+    public function destroy(Autor $autor, Request $request)
     {
         $this->authorize('delete', $autor);
         if ($autor->foto_url) {
             \Storage::disk('public')->delete($autor->foto_url);
         }
         $autor->delete();
+
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($autor)
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+            ])
+            ->log('Autor excluído');
 
         return redirect()->route('autores.index')->with('success', 'Autor excluído com sucesso.');
     }
@@ -143,7 +182,16 @@ class AutorController extends Controller
         $validated['origem'] = 'manual'; 
         $validated['user_id'] = auth()->id();
 
-        Autor::create($validated);
+        $autor = Autor::create($validated);
+
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($autor)
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+            ])
+            ->log('Autor criado');
 
         return redirect()->route('autores.index')->with('success', 'Autor criado com sucesso.');
     }

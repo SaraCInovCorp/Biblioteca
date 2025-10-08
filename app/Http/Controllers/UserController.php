@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Spatie\Activitylog\Models\Activity;
 
 class UserController extends Controller
 {
@@ -48,6 +49,20 @@ class UserController extends Controller
             $query = $user->requisicoes()->with('items.livro')->orderByDesc('data_inicio');
             $historico = $query->paginate(10);
         }
+
+        activity()
+        ->causedBy($authUser)
+        ->performedOn($user ?? $authUser)
+        ->event('show')
+        ->useLog('show-user')
+        ->withProperties([
+            'ip' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+            'isAdmin' => $isAdmin,
+            'searched_user_id' => $user?->id,
+            'searched_term' => $request->input('q', ''),
+        ])
+        ->log('Visualização de perfil de usuário');
 
         return view('users.show', [
             'user' => $user,

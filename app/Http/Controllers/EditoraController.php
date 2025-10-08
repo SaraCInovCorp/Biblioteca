@@ -19,6 +19,7 @@ use App\Exports\EditorasExport;
 use Maatwebsite\Excel\Facades\Excel;
 use PDF;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Spatie\Activitylog\Models\Activity;
 
 
 class EditoraController extends Controller
@@ -73,6 +74,17 @@ class EditoraController extends Controller
     {
         $fileName = 'editoras_' . now()->format('Ymd_His') . '.xlsx';
 
+        activity()
+        ->causedBy(auth()->user())
+        ->event('exportexcel')
+        ->useLog('exportexcel-editora')
+        ->withProperties([
+            'ip' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+            'query' => $request->query('query'),
+        ])
+        ->log('Exportação Excel de editoras');
+
         return (new EditorasExport($request->query('query')))->download($fileName);
     }
 
@@ -82,6 +94,17 @@ class EditoraController extends Controller
 
         $pdf = PDF::loadView('editoras.export_pdf', compact('editoras'));
 
+        activity()
+        ->causedBy(auth()->user())
+        ->event('exportpdf')
+        ->useLog('exportpdf-editora')
+        ->withProperties([
+            'ip' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+            'query' => $request->query('query'),
+        ])
+        ->log('Exportação PDF de editoras');
+        
         return $pdf->download('editoras_' . now()->format('Ymd_His') . '.pdf');
     }
 
@@ -102,6 +125,19 @@ class EditoraController extends Controller
 
         $editora->update($validated);
 
+        activity()
+            ->causedBy(Auth::user())
+            ->event('update')
+            ->useLog('update-editora')
+            ->performedOn($editora)
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+                'attributes' => $editora->getChanges(),
+                'old' => $editora->getOriginal(),
+            ])
+            ->log('Editora atualizada');
+
         return redirect()->route('editoras.index')->with('success', 'Editora atualizada com sucesso.');
     }
 
@@ -119,6 +155,15 @@ class EditoraController extends Controller
         }
 
         $editora->delete();
+
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($editora)
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+            ])
+            ->log('Editora excluída');
 
         return redirect()->route('editoras.index')->with('success', 'Editora excluída com sucesso.');
     }
@@ -144,7 +189,16 @@ class EditoraController extends Controller
         $validated['origem'] = 'manual';
         $validated['user_id'] = auth()->id();
 
-        Editora::create($validated);
+        $editora = Editora::create($validated);
+
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($editora)
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+            ])
+            ->log('Editora criada');
 
         return redirect()->route('editoras.index')->with('success', 'Editora criada com sucesso.');
     }

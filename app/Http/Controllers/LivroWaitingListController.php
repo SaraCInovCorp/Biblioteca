@@ -6,6 +6,7 @@ use App\Models\LivroWaitingList;
 use Illuminate\Http\Request;
 use App\Models\Livro;
 use App\Models\User;
+use Spatie\Activitylog\Models\Activity;
 
 class LivroWaitingListController extends Controller
 {
@@ -59,12 +60,23 @@ class LivroWaitingListController extends Controller
             ], 422);
         }
 
-        LivroWaitingList::create([
+        $item = LivroWaitingList::create([
             'livro_id' => $livro->id,
             'user_id' => $user->id,
             'ativo' => true,
             'notificado_em' => null,
         ]);
+
+        activity()
+        ->causedBy($user)
+        ->performedOn($item)
+        ->event('store')
+        ->useLog('store-waitinglist')
+        ->withProperties([
+            'ip' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+        ])
+        ->log('Inscrição na lista de espera');
 
         return response()->json([
             'success' => 'Inscrição realizada com sucesso! Você será notificado.'
@@ -84,6 +96,17 @@ class LivroWaitingListController extends Controller
 
         $livroWaitingList->ativo = false;
         $livroWaitingList->save();
+
+        activity()
+        ->causedBy($user)
+        ->performedOn($livroWaitingList)
+        ->event('destroy')
+        ->useLog('destroy-waitinglist')
+        ->withProperties([
+            'ip' => request()->ip(),
+            'user_agent' => request()->header('User-Agent'),
+        ])
+        ->log('Cancelamento de inscrição na lista de espera');
 
         return back()->with('success', 'Inscrição cancelada com sucesso.');
     }

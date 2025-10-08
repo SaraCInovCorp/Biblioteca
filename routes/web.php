@@ -27,6 +27,8 @@ use App\Models\Autor;
 use App\Models\Editora;
 use App\Models\AutorLivro;
 use App\Models\Bookrequest;
+use App\Models\ActivityLog;
+use App\Http\Controllers\ActivityLogController;
 
 Route::get('/', [HomeController::class, 'index'])->name('welcome');
 
@@ -61,6 +63,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         return view('profile.show');
     })->name('dashboard');
 
+    Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('admin.activity-logs.index');
     Route::get('admin/register', [AdminRegisterController::class, 'create'])->name('admin.register');
     Route::post('admin/register', [AdminRegisterController::class, 'store'])->name('admin.register.store');
 
@@ -164,12 +167,14 @@ Route::get('autores/{autor}', [AutorController::class, 'show'])->name('autores.s
 Route::get('editoras', [EditoraController::class, 'index'])->name('editoras.index');
 Route::get('editoras/{editora}', [EditoraController::class, 'show'])->name('editoras.show');
 
- // Rotas para o carrinho
+// Rotas para o carrinho
 Route::get('carrinho', [CarrinhoController::class, 'index'])->name('carrinho.index');
 Route::post('carrinho/limpar', [CarrinhoController::class, 'limparCarrinho'])->name('carrinho.limpar');
 Route::post('carrinho/adicionar/{livro}', [CarrinhoController::class, 'adicionar'])->name('carrinho.adicionar');
-Route::post('carrinho/atualizar/{item}', [CarrinhoController::class, 'atualizar'])->name('carrinho.atualizar');
-Route::post('carrinho/remover/{item}', [CarrinhoController::class, 'remover'])->name('carrinho.remover');
+Route::put('carrinho/atualizar/{item}', [CarrinhoController::class, 'atualizar'])->name('carrinho.atualizar')->middleware('auth');
+Route::post('carrinho/atualizar-sessao', [CarrinhoController::class, 'atualizarSessao'])->name('carrinho.atualizar.sessao');
+Route::post('carrinho/remover/{item}', [CarrinhoController::class, 'remover'])->name('carrinho.remover')->middleware('auth');
+Route::post('carrinho/remover-sessao', [CarrinhoController::class, 'removerSessao'])->name('carrinho.remover.sessao');
 
 Route::get('livros/export/excel', [LivroController::class, 'exportExcel'])->name('livros.export.excel');
 Route::get('livros/export/pdf', [LivroController::class, 'exportPdf'])->name('livros.export.pdf');

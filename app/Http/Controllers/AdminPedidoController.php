@@ -12,6 +12,7 @@ use Stripe\Stripe;
 use Stripe\Refund;
 use App\Notifications\PedidoCancelamentoStatusNotification;
 use App\Notifications\PedidoCanceladoPorAdminNotification;
+use Spatie\Activitylog\Models\Activity;
 
 class AdminPedidoController extends Controller
 {
@@ -88,6 +89,21 @@ class AdminPedidoController extends Controller
         $pedido->cancelamento_solicitado = false;
         $pedido->save();
 
+        activity()
+            ->causedBy($user)
+            ->performedOn($pedido)
+            ->event('aprovarcancelamento')
+            ->useLog('aprovarcancelamento-admin-pedido')
+            ->withProperties([
+                'ip' => request()->ip(),
+                'user_agent' => request()->header('User-Agent'),
+                'user_executor_id' => $user->id,
+                'user_for_id' => $pedido->user_id,
+                'status_anterior' => $pedido->getOriginal('status'),
+                'status_novo' => $pedido->status,
+            ])
+            ->log('Pedido cancelado pelo admin');
+
         $pedido->user->notify(new PedidoCancelamentoStatusNotification($pedido, true));
 
         return redirect()->back()->with('success', 'Cancelamento aprovado e reembolso realizado.');
@@ -108,6 +124,21 @@ class AdminPedidoController extends Controller
         $pedido->cancelamento_solicitado = false;
         $pedido->save();
 
+        activity()
+            ->causedBy($user)
+            ->performedOn($pedido)
+            ->event('rejeitarcancelamento')
+            ->useLog('rejeitarcancelamento-admin-pedido')
+            ->withProperties([
+                'ip' => request()->ip(),
+                'user_agent' => request()->header('User-Agent'),
+                'user_executor_id' => $user->id,
+                'user_for_id' => $pedido->user_id,
+                'status_anterior' => $pedido->getOriginal('status'),
+                'status_novo' => $pedido->status,
+            ])
+            ->log('Pedido cancelado pelo admin');
+
         $pedido->user->notify(new PedidoCancelamentoStatusNotification($pedido, false));
 
         return redirect()->back()->with('success', 'Solicitação de cancelamento rejeitada.');
@@ -125,13 +156,25 @@ class AdminPedidoController extends Controller
             $pedido->cancelamento_solicitado = false;
             $pedido->save();
 
+            activity()
+                ->causedBy($user)
+                ->performedOn($pedido)
+                ->event('cancel')
+                ->useLog('cancel-admin-pedido')
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'user_agent' => request()->header('User-Agent'),
+                    'user_executor_id' => $user->id,
+                    'user_for_id' => $pedido->user_id,
+                    'status_anterior' => $pedido->getOriginal('status'),
+                    'status_novo' => $pedido->status,
+                ])
+                ->log('Pedido cancelado pelo admin');
+
             $pedido->user->notify(new PedidoCanceladoPorAdminNotification($pedido));
         }
 
         return redirect()->route('admin.pedidos.show', $pedido)->with('success', 'Pedido cancelado e usuário notificado.');
     }
-
-
-
 
 }

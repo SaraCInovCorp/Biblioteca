@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\BookRequestItem;
 use App\Models\BookRequest;
+use Spatie\Activitylog\Models\Activity;
 
 class ReviewController extends Controller
 {
@@ -60,9 +61,26 @@ class ReviewController extends Controller
 
         foreach ($data['review_ids'] as $id) {
             $review = BookReview::find($id);
+
+            $oldReview = $review->replicate();
+
             $review->status = $data['new_status'];
             $review->admin_justification = $data['admin_justification'] ?? null;
             $review->save();
+
+            activity()
+            ->causedBy($request->user())
+            ->performedOn($review)
+            ->event('bulkupdate')
+            ->useLog('bulkupdate-review')
+            ->withProperties([
+                'ip' => request()->ip(),
+                'user_agent' => request()->header('User-Agent'),
+                'attributes' => $review->getChanges(),
+                'old' => $oldReview->toArray(),
+            ])
+            ->log('Atualização em lote de review');
+            
         }
 
         return redirect()->route('reviews.index')->with('success', 'Status atualizados com sucesso.');
@@ -88,7 +106,22 @@ class ReviewController extends Controller
             'admin_justification' => 'nullable|string',
         ]);
 
+        $oldReview  = $bookReview->replicate();
+
         $bookReview->update($data);
+
+        activity()
+            ->causedBy($request->user())
+            ->performedOn($bookReview)
+            ->event('update')
+            ->useLog('update-review')
+            ->withProperties([
+                'ip' => request()->ip(),
+                'user_agent' => request()->header('User-Agent'),
+                'attributes' => $bookReview->getChanges(),
+                'old' => $oldReview->toArray(),
+            ])
+            ->log('Review atualizada');
 
         return redirect()->route('reviews.index')->with('success', 'Review atualizada com sucesso.');
     }

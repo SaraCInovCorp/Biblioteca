@@ -10,6 +10,7 @@ use App\Models\Carrinho;
 use App\Models\Encomenda;
 use App\Models\EncomendaItem;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Activitylog\Models\Activity;
 
 class CheckoutController extends Controller
 {
@@ -110,12 +111,72 @@ class CheckoutController extends Controller
             if (empty($encomenda->id) || empty($paymentIntent->client_secret)) {
                 return redirect()->route('checkout.index')->withErrors('Erro ao processar pagamento: dados incompletos!');
             }
+
+            $encomenda->load('items');
+
+            activity()
+            ->causedBy(auth()->user())
+            ->performedOn($encomenda)
+            ->event('store')
+            ->useLog('store-encomenda')
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+                'user_executor_id' => auth()->id(),
+                'user_for_id' => $encomenda->user_id,
+                'total' => $encomenda->total,
+                'status' => $encomenda->status,
+                'payment_status' => $encomenda->payment_status,
+                'items' => $encomenda->items->map(fn($item) => [
+                    'id' => $item->id,
+                    'livro_id' => $item->livro_id,
+                    'quantidade' => $item->quantidade,
+                    'preco_unitario' => $item->preco_unitario,
+                ]),
+            ])
+            ->log('Encomenda criada');
+
             return redirect()->route('checkout.pagamento', [
                 'encomenda' => $encomenda->id,
                 'clientSecret' => $paymentIntent->client_secret
             ]);
+        } catch (ApiErrorException $e) {
+            DB::rollBack();
+
+            activity()
+                ->causedBy(auth()->user())
+                ->event('error')
+                ->useLog('error-checkout')
+                ->withProperties([
+                    'ip' => $request->ip(),
+                    'user_agent' => $request->header('User-Agent'),
+                    'user_executor_id' => auth()->id(),
+                    'error_type' => 'Stripe API error',
+                    'error_message' => $e->getMessage(),
+                    'error_code' => $e->getStripeCode(),
+                    'error_param' => $e->getStripeParam(),
+                    'error_json' => $e->getJsonBody(),
+                ])
+                ->log('Erro ao processar pagamento via Stripe');
+
+            return redirect()->route('checkout.erro')
+                            ->withErrors('Não conseguimos autenticar sua forma de pagamento. Escolha outra forma e tente novamente.');
         } catch (\Exception $e) {
             DB::rollBack();
+
+            activity()
+                ->causedBy($user)
+                ->event('error')
+                ->useLog('error-checkout')
+                ->withProperties([
+                    'ip' => $request->ip(),
+                    'user_agent' => $request->header('User-Agent'),
+                    'user_executor_id' => $user ? $user->id : null,
+                    'error_message' => $e->getMessage(),
+                    'error_trace' => $e->getTraceAsString(),
+                ])
+                ->log('Erro ao processar pedido no checkout');
+
             return redirect()->route('checkout.index')->withErrors('Erro ao processar pedido: ' . $e->getMessage());
         }
     }
@@ -155,6 +216,29 @@ class CheckoutController extends Controller
                 $encomenda->payment_status = 'pago';
                 $encomenda->status = 'finalizado';
                 $encomenda->save();
+
+                activity()
+                    ->causedBy($user)
+                    ->performedOn($encomenda)
+                    ->event('finalizado')
+                    ->useLog('finalizado-encomenda')
+                    ->withProperties([
+                        'ip' => $request->ip(),
+                        'user_agent' => $request->header('User-Agent'),
+                        'user_executor_id' => $user->id,
+                        'user_for_id' => $encomenda->user_id,
+                        'status_anterior' => $encomenda->getOriginal('status'),
+                        'status_novo' => $encomenda->status,
+                        'payment_status' => $encomenda->payment_status,
+                        'total' => $encomenda->total,
+                        'items' => $encomenda->items->map(fn($item) => [
+                            'id' => $item->id,
+                            'livro_id' => $item->livro_id,
+                            'quantidade' => $item->quantidade,
+                            'preco_unitario' => $item->preco_unitario,
+                        ]),
+                    ])
+                    ->log('Compra finalizada e encomenda atualizada para finalizado');
             }
         }
 

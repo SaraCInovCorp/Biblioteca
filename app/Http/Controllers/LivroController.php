@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Notifications\LivroDisponivelNotification;
 use Illuminate\Support\Facades\Notification;
+use Spatie\Activitylog\Models\Activity;
 
 class LivroController extends Controller
 {
@@ -62,6 +63,20 @@ class LivroController extends Controller
 
         $fileName = 'livros_' . now()->format('Ymd_His') . '.xlsx';
 
+        activity()
+        ->causedBy(auth()->user())
+        ->event('exportexcel')
+        ->useLog('exportexcel-livro')
+        ->withProperties([
+            'ip' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+            'ids' => $ids,
+            'query' => $request->query('query'),
+            'editora' => $request->query('editora'),
+            'autor' => $request->query('autor'),
+        ])
+        ->log('Exportação Excel de livros');
+
         if (!empty($ids)) {
             return (new LivrosExport(null, null, null, $ids))->download($fileName);
         }
@@ -95,6 +110,20 @@ class LivroController extends Controller
 
         $pdf = PDF::loadView('livros.export_pdf', compact('livros'))
             ->setPaper('a4', 'landscape');
+
+        activity()
+        ->causedBy(auth()->user())
+        ->event('exportpdf')
+        ->useLog('exportpdf-livro')
+        ->withProperties([
+            'ip' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+            'ids' => $ids,
+            'query' => $request->query('query'),
+            'editora' => $request->query('editora'),
+            'autor' => $request->query('autor'),
+        ])
+        ->log('Exportação PDF de livros');
 
         return $pdf->download('livros_' . now()->format('Ymd_His') . '.pdf');
     }
@@ -136,6 +165,18 @@ class LivroController extends Controller
                     'user_id' => auth()->id(),
                 ]
             );
+
+            activity()
+            ->causedBy(auth()->user())
+            ->performedOn($editora)
+            ->event('store')
+            ->useLog('store-livro-editora')
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+            ])
+            ->log('Nova editora criada ao registrar livro.');
+
             $editoraId = $editora->id;
         } else {
             $editoraId = $validated['editora_id'];
@@ -154,6 +195,17 @@ class LivroController extends Controller
                         ]
                     );
                     $autor_ids[] = $autor->id;
+
+                    activity()
+                    ->causedBy(auth()->user())
+                    ->performedOn($autor)
+                    ->event('store')
+                    ->useLog('store-livro-autor')
+                    ->withProperties([
+                        'ip' => $request->ip(),
+                        'user_agent' => $request->header('User-Agent'),
+                    ])
+                    ->log('Novo autor criado ao registrar livro.');
                 }
             }
         }
@@ -177,7 +229,7 @@ class LivroController extends Controller
             'isbn' => $validated['isbn'],
             'status' => 'disponivel',
             'editora_id' => $editoraId,
-            'origem' => 'manual',   // ou 'import' se livro vier de importação
+            'origem' => 'manual',   
             'user_id' => auth()->id(),
         ];
 
@@ -185,6 +237,18 @@ class LivroController extends Controller
 
         $livro->autores()->sync($autor_ids);
         //Log::info($livro);
+
+        activity()
+            ->causedBy(Auth::user())
+            ->event('store')
+            ->useLog('store-livro')
+            ->performedOn($livro)
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+                'status' => $livro->status,
+            ])
+            ->log('Livro adicionado com sucesso.');
 
         return redirect()->route('livros.index')->with('success', 'Livro criado com sucesso!');
     }
@@ -370,6 +434,7 @@ class LivroController extends Controller
                 if ($novoAutor) {
                     $autor = Autor::firstOrCreate(['nome' => $novoAutor]);
                     $autor_ids[] = $autor->id;
+
                 }
             }
         }
@@ -378,6 +443,19 @@ class LivroController extends Controller
         $livro->update($validated);
 
         $livro->autores()->sync($validated['autores']);
+
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($livro)
+            ->event('update')
+            ->useLog('update-livro')
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+                'attributes' => $livro->getChanges(),
+                'old' => $livro->getOriginal(),
+            ])
+            ->log('Livro atualizado');
 
         return redirect()->route('livros.index')->with('success', 'Livro atualizado com sucesso!');
     }
@@ -388,7 +466,6 @@ class LivroController extends Controller
         $livro->save();
 
         if ($livro->status === 'disponivel') {
-            // Buscar usuários ativos na lista de espera desse livro
             $inscritos = LivroWaitingList::with('user')
                 ->where('livro_id', $livro->id)
                 ->where('ativo', true)
@@ -396,16 +473,26 @@ class LivroController extends Controller
 
             $usuarios = $inscritos->pluck('user')->filter();
 
-            // Enviar notificação para todos os usuários
             Notification::send($usuarios, new LivroDisponivelNotification($livro));
 
-            // Marcar as inscrições como notificadas e inativas
             foreach ($inscritos as $inscricao) {
                 $inscricao->ativo = false;
                 $inscricao->notificado_em = now();
                 $inscricao->save();
             }
         }
+
+        activity()
+            ->causedBy(Auth::user())
+            ->event('destroy')
+            ->useLog('destroy-livro')
+            ->performedOn($livro)
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+                'status' => $livro->status,
+            ])
+            ->log('Status do livro alterado');
 
         return back()->with('success', 'Status do livro atualizado e notificações enviadas!');
     }

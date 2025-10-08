@@ -7,6 +7,7 @@ use App\Models\Carrinho;
 use App\Models\Encomenda;
 use App\Models\EncomendaItem;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Activitylog\Models\Activity;
 
 class PedidoController extends Controller
 {
@@ -66,6 +67,20 @@ class PedidoController extends Controller
             $pedido->status = 'cancelado';
             $pedido->save();
 
+            activity()
+                ->causedBy($user)
+                ->performedOn($pedido)
+                ->event('cancelarpedido')
+                ->useLog('cancelarpedido-pedido-cidadao')
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'user_agent' => request()->header('User-Agent'),
+                    'user_executor_id' => $user->id,
+                    'user_for_id' => $pedido->user_id,
+                    'status_novo' => $pedido->status,
+                ])
+                ->log('Pedido cancelado pelo cidadão');
+
             return redirect()->route('pedidos.meus')->with('success', 'Pedido cancelado com sucesso.');
         }
 
@@ -93,6 +108,21 @@ class PedidoController extends Controller
 
         $pedido->cancelamento_solicitado = true;
         $pedido->save();
+
+        activity()
+            ->causedBy($user)
+            ->performedOn($pedido)
+            ->event('solicitar_cancelamento')
+            ->useLog('solicitar_cancelamento_pedido')
+            ->withProperties([
+                'ip' => request()->ip(),
+                'user_agent' => request()->header('User-Agent'),
+                'user_executor_id' => $user->id,
+                'user_for_id' => $pedido->user_id,
+                'status_anterior' => $pedido->getOriginal('cancelamento_solicitado'),
+                'status_novo' => $pedido->cancelamento_solicitado,
+            ])
+            ->log('Solicitação de cancelamento enviada pelo usuário');
 
         return redirect()->back()->with('success', 'Solicitação de cancelamento enviada com sucesso.');
     }

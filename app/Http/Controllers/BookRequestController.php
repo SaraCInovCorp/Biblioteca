@@ -16,6 +16,10 @@ use App\Models\BookReview;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use App\Mail\ReviewCreatedAdminNotification;
+use Spatie\Activitylog\Models\Activity;
+use Illuminate\Support\Facades\Notification;
+use App\Models\LivroWaitingList;
+use App\Notifications\LivroDisponivelNotification;
 
 class BookRequestController extends Controller
 {
@@ -24,7 +28,7 @@ class BookRequestController extends Controller
         $user = Auth::user();
         $filtro = $request->get('filtro', '');
         $search = $request->input('search');
-        $statusFiltro = $request->input('status'); // ex: 'ativa' ou 'inativa'
+        $statusFiltro = $request->input('status'); 
         $dataInicioFiltro = $request->input('data_inicio');
         $dataFimFiltro = $request->input('data_fim');
         $dataRealEntregaFiltro = $request->input('data_real_entrega');
@@ -143,7 +147,7 @@ class BookRequestController extends Controller
     public function create()
     {
         //\Log::info('Entrou no método create do BookRequestController');
-        $user = Auth::user(); // já vai existir
+        $user = Auth::user(); 
         $livros = Livro::where('status', 'disponivel')->get();
         $users = $user->role === 'admin'
             ? User::where('role', 'cidadao')->get()
@@ -225,6 +229,29 @@ class BookRequestController extends Controller
             }
 
             \DB::commit();
+            $bookRequest->load('items');
+            activity()
+            ->causedBy(auth()->user())
+            ->performedOn($bookRequest)
+            ->event('store')
+            ->useLog('store-bookrequest')
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+                'user_executor_id' => auth()->id(),
+                'user_request_for_id' => $bookRequest->user_id, 
+                'data_inicio' => $bookRequest->data_inicio,
+                'data_fim' => $bookRequest->data_fim,
+                'items' => $bookRequest->items->map(function($item) {
+                    return [
+                        'livro_id' => $item->livro_id,
+                        'status' => $item->status,
+                        'obs' => $item->obs,
+                    ];
+                }),
+            ])
+            ->log('Requisição criada');
+
             $request->session()->forget('book_request');
 
             $bookRequest->load(['user', 'items.livro']);
@@ -351,13 +378,13 @@ class BookRequestController extends Controller
                         $livro->save();
 
                         if ($livro->wasChanged('status') && $livro->status === 'disponivel') {
-                            $inscritos = \App\Models\LivroWaitingList::with('user')
+                            $inscritos = LivroWaitingList::with('user')
                                 ->where('livro_id', $livro->id)
                                 ->where('ativo', true)
                                 ->get();
                             $usuarios = $inscritos->pluck('user')->filter();
 
-                            \Illuminate\Support\Facades\Notification::send($usuarios, new \App\Notifications\LivroDisponivelNotification($livro));
+                            Notification::send($usuarios, new LivroDisponivelNotification($livro));
                             
                             foreach ($inscritos as $inscricao) {
                                 $inscricao->ativo = false;
@@ -385,15 +412,43 @@ class BookRequestController extends Controller
                                         'admin_justification' => null,
                                     ]);
 
+                                    activity()
+                                    ->causedBy($user)
+                                    ->performedOn($review)
+                                    ->event('store')
+                                    ->useLog('store-review')
+                                    ->withProperties([
+                                        'ip' => request()->ip(),
+                                        'user_agent' => request()->header('User-Agent'),
+                                        'review_text' => $reviewText,
+                                    ])
+                                    ->log('Review criada');
+
                                     $admins = User::where('role', 'admin')->pluck('email')->toArray();
                                     Mail::to($admins)->send(new ReviewCreatedAdminNotification($review));
                                 } else {
+                                    $oldReview = $existingReview->replicate();
+
                                     if (in_array($existingReview->status, ['ativo', 'recusado'])) {
-                                        $existingReview->status = 'suspenso';
                                         $existingReview->admin_justification = null;
                                     }
+                                    $existingReview->status = in_array($existingReview->status, ['ativo', 'recusado']) ? 'suspenso' : $existingReview->status;
+
                                     $existingReview->review_text = $reviewText;
                                     $existingReview->save();
+
+                                    activity()
+                                    ->causedBy($user)
+                                    ->performedOn($existingReview)
+                                    ->event('update')
+                                    ->useLog('update-review')
+                                    ->withProperties([
+                                        'ip' => request()->ip(),
+                                        'user_agent' => request()->header('User-Agent'),
+                                        'attributes' => $existingReview->getChanges(),
+                                        'old' => $oldReview->toArray(),
+                                    ])
+                                    ->log('Review atualizada');
 
                                     if (in_array($existingReview->status, ['suspenso'])) {
                                         $admins = User::where('role', 'admin')->pluck('email')->toArray();
@@ -429,9 +484,29 @@ class BookRequestController extends Controller
                 'lembrete_enviado_em' => $bookRequest->lembrete_enviado_em,
                 'lembrete_enviado_para' => $bookRequest->lembrete_enviado_para,
             ]);
-            \Log::info('Pedido atualizado, commit.');
+            
             \DB::commit();
-            \Log::info('Transação commitada com sucesso.');
+            $bookRequest->load('items');
+            activity()
+            ->causedBy(auth()->user())
+            ->performedOn($bookRequest)
+            ->event('update')
+            ->useLog('update-bookrequest')
+            ->withProperties([
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+                'user_executor_id' => auth()->id(),
+                'user_request_for_id' => $bookRequest->user_id,
+                'attributes' => $bookRequest->getChanges(),
+                'items' => $bookRequest->items->map(function($item) {
+                    return [
+                        'livro_id' => $item->livro_id,
+                        'status' => $item->status,
+                        'obs' => $item->obs,
+                    ];
+                }),
+            ])
+            ->log('Requisição atualizada');
         } catch (\Exception $e) {
             \DB::rollBack();
             \Log::error('Erro inesperado durante atualização de requisição: ' . $e->getMessage(), [
@@ -463,7 +538,7 @@ class BookRequestController extends Controller
         $users = User::where('role', 'cidadao')
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                ->orWhere('email', 'like', "%{$query}%"); // incluído email aqui
+                ->orWhere('email', 'like', "%{$query}%"); 
             })
             ->limit(10)
             ->get(['id', 'name', 'email']);
@@ -509,7 +584,7 @@ class BookRequestController extends Controller
 
     public function destroy(BookRequest $bookRequest)
     {
-        $this->authorize('delete', $bookRequest); // Se tiver política
+        $this->authorize('delete', $bookRequest); 
 
         $now = now();
 
@@ -524,13 +599,24 @@ class BookRequestController extends Controller
             $bookRequest->ativo = false;
             $bookRequest->save();
 
-            // Atualiza status dos livros associados para "disponivel"
+            activity()
+            ->causedBy(auth()->user())
+            ->performedOn($bookRequest)
+            ->event('destroy')
+            ->useLog('destroy-bookrequest')
+            ->withProperties([
+                'ip' => request()->ip(),
+                'user_agent' => request()->header('User-Agent'),
+            ])
+            ->log('Requisição cancelada');
+
+            
             foreach ($bookRequest->items as $item) {
                 $livro = $item->livro;
                 $livro->status = 'disponivel';
                 $livro->save();
 
-                // Opcional: atualizar status do item da requisição para "cancelada"
+                
                 $item->status = 'cancelada';
                 $item->save();
             }
