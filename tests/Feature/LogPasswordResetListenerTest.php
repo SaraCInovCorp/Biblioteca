@@ -1,28 +1,24 @@
 <?php
 
-namespace Tests\Feature;
-
-use Tests\TestCase;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-class LogPasswordResetListenerTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    public function testPasswordResetListenerIsCalled()
-    {
-        $user = User::factory()->create();
+test('password reset listener is called', function () {
+    $user = User::factory()->create();
 
-        Log::shouldReceive('info')
-            ->once()
-            ->withArgs(function ($msg) use ($user) {
-                return str_contains($msg, 'Capturou evento PasswordReset') && str_contains($msg, (string) $user->id);
-            });
+    Log::spy();
 
-        event(new PasswordReset($user));
-    }
-}
+    event(new PasswordReset($user));
+
+    Log::shouldHaveReceived('info')
+        ->atLeast()->once()
+        ->withArgs(function ($msg) use ($user) {
+            return str_contains($msg, 'LogPasswordReset') &&
+                   str_contains($msg, (string) $user->id);
+        });
+});

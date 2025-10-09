@@ -1,8 +1,8 @@
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Logo Laravel"></a></p>
 
-# Sistema de Biblioteca - Gestão de Livros, Editoras e Autores
+# Sistema de Biblioteca e Loja de Livros - Gestão de Livros, Editoras e Autores
 
-Sistema web desenvolvido com Laravel no backend e Blade no frontend, destinado a gerenciar de forma eficiente bibliotecas com controle completo de livros, editoras e autores.
+Sistema web desenvolvido com Laravel no backend e Blade no frontend, destinado a gerenciar de forma eficiente bibliotecas com controle completo de livros, editoras e autores, e funcionando também como uma loja online de livros com carrinho, checkout e histórico de compras.
 
 ---
 
@@ -11,6 +11,7 @@ Sistema web desenvolvido com Laravel no backend e Blade no frontend, destinado a
 - **Laravel 11+** — Framework PHP robusto e moderno para backend.  
 - **Blade** — Template engine nativo do Laravel para renderização server-side.  
 - **Tailwind CSS & DaisyUI** — Estilização moderna com componentes reutilizáveis.  
+- **Alpine.js** — Biblioteca leve para interatividade frontend em páginas Blade, facilitando a criação de interfaces modernas sem frameworks pesados.
 - **Laravel Jetstream** — Sistema de autenticação completo, incluindo autenticação em dois fatores (2FA).  
 - **Maatwebsite Excel & Barryvdh Dompdf** — Exportação para Excel e PDF, incluindo suporte a imagens e layout paisagem.  
 - **SQLite** — Banco de dados leve, configurado para fácil uso em desenvolvimento local e testes.  
@@ -75,8 +76,6 @@ O sistema possui uma funcionalidade dedicada que permite importar livros diretam
 - A funcionalidade integra-se com as policies do Laravel para controle de acesso.
 - O campo ISBN é utilizado como identificador único para prevenir cadastros duplicados.
 
-Este recurso facilita a manutenção e atualização do acervo, integrando informações reais e garantindo a qualidade dos dados do sistema.
-
 ### Funcionalidade: Listagem e Detalhe das Importações
 
 - O sistema inclui uma página para visualizar todas as importações feitas pelo usuário.  
@@ -99,35 +98,16 @@ Este recurso facilita a manutenção e atualização do acervo, integrando infor
 
 O projeto possui uma modelagem robusta, com as seguintes tabelas e relacionamentos principais:
 
-- **livros**  
-  Armazena os livros com campos: `isbn`, `titulo`, `bibliografia`, `preco`, `capa_url`, `status`, e chave estrangeira `editora_id`.
-
-- **autores**  
-  Lista de autores, relacionados a livros via relacionamento muitos-para-muitos.
-
-- **editoras**  
-  Editoras vinculadas aos livros.
-
-- **autor_livro** (pivot)  
-  Relação muitos-para-muitos entre autores e livros.
-
-- **importacoes**  
-  Registros das importações feitas pelos usuários.
-
-- **livro_importacao** (pivot)  
-  Relação muitos-para-muitos entre livros e importações.
-
-- **autor_importacao** (pivot)  
-  Relação muitos-para-muitos entre autores e importações.
-
-- **editora_importacao** (pivot)  
-  Relação muitos-para-muitos entre editoras e importações.
-
-- **book_requests**  
-  Requisições feitas pelos usuários, contendo dados como usuário requisitante, datas e status.
-
-- **book_request_items**  
-  Ligação individual de livros a requisições, com status, data prevista e data real de entrega.
+- **livros** — armazena os livros com campos: `isbn`, `titulo`, `bibliografia`, `preco`, `capa_url`, `status`, e chave estrangeira `editora_id`.  
+- **autores** — lista de autores, relacionados a livros via relacionamento muitos-para-muitos.  
+- **editoras** — editoras vinculadas aos livros.  
+- **autor_livro** (pivot) — relação muitos-para-muitos entre autores e livros.  
+- **importacoes** — registros das importações feitas pelos usuários.  
+- **livro_importacao** (pivot) — relação muitos-para-muitos entre livros e importações.  
+- **autor_importacao** (pivot) — relação muitos-para-muitos entre autores e importações.  
+- **editora_importacao** (pivot) — relação muitos-para-muitos entre editoras e importações.  
+- **book_requests** — requisições feitas pelos usuários, contendo dados como usuário requisitante, datas e status.  
+- **book_request_items** — ligação individual de livros a requisições, com status, data prevista e data real de entrega.
 
 Essas tabelas pivot garantem a flexibilidade para associar múltiplos autores e editoras a livros e importações, além de armazenar o histórico completo das requisições.
 
@@ -136,15 +116,16 @@ Essas tabelas pivot garantem a flexibilidade para associar múltiplos autores e 
 ## Funcionalidades Principais
 
 - Gerenciamento completo: Adicione, edite, pesquise e remova livros, autores e editoras por uma interface intuitiva, com relacionamentos automáticos entre entidades.  
-- Filtros e busca avançada: Realize pesquisas flexíveis filtrando por título, autor, editora, status, data de cadastro ou usuário requisitante, tornando a localização de registros ágil mesmo em grandes acervos.  
-- Paginação eficiente: Exibe os resultados de maneira responsiva e paginada, aproveitando o recurso nativo `paginate` do Laravel para melhor desempenho e experiência do usuário.  
-- Exportação de dados: Exporte listas de livros para Excel ou PDF, com suporte a filtros, imagens, layouts otimizados e geração personalizada por importação.  
-- Sistema de requisição: Usuários podem solicitar empréstimo de livros diretamente pelo sistema, com limites configuráveis para cidadãos e acompanhamento em tempo real do status das solicitações.  
-- Criação e gerenciamento de reviews: Usuários podem avaliar livros requisitados, enquanto administradores possuem painel dedicado para revisar, aprovar, filtrar, alterar status e justificar decisões sobre cada avaliação recebida. 
-- Lista de espera inteligente e notificações: Usuários podem se inscrever em listas de espera para livros indisponíveis e recebem notificações automáticas por email quando o item volta ao acervo, evitando notificações duplicadas.
-- Controle de acesso robusto: Sistema de autenticação via Laravel Jetstream, incluindo autenticação em dois fatores (2FA) e políticas detalhadas de permissão para cada perfil.
-- Interface moderna: Todas as telas são server-rendered utilizando Blade e componentização reutilizável, integrando Tailwind CSS/DaisyUI para experiência visual limpa e responsiva.  
-- Loja online integrada ao Stripe: carrinho, checkout, pagamento e histórico de compras.
+- Filtros e busca avançada: Pesquise por título, autor, editora, status, data de cadastro ou usuário requisitante.  
+- Paginação eficiente: Exibe resultados de forma paginada usando `paginate` do Laravel.  
+- Exportação de dados: Excel e PDF com suporte a imagens e layout personalizado.  
+- Sistema de requisição: Usuários solicitam empréstimo de livros, com limites configuráveis e acompanhamento em tempo real.  
+- Criação e gerenciamento de reviews: Usuários avaliam livros e administradores podem revisar, aprovar ou alterar status.  
+- Lista de espera inteligente e notificações automáticas.  
+- Controle de acesso robusto com Laravel Jetstream, incluindo 2FA.  
+- Interface moderna usando Blade, Tailwind CSS e DaisyUI.  
+- Loja online integrada ao Stripe, com carrinho, checkout e histórico de compras.  
+- Registro detalhado de atividades no sistema para auditoria e monitoramento.
 
 Essas funcionalidades garantem uma gestão profissional, moderna e segura para acervos de bibliotecas digitais ou físicas, trazendo automação e inteligência para operações do dia a dia do usuário e do administrador.
 
@@ -152,35 +133,97 @@ Essas funcionalidades garantem uma gestão profissional, moderna e segura para a
 
 ## Processo de Requisição de Livros
 
-O sistema implementa um fluxo completo para o processo de requisição de livros por usuários (cidadãos) e administradores:
-
-- **Criação da Requisição:**  
-  Usuários criam requisições selecionando um ou mais livros disponíveis, podendo adicionar notas.  
-  - Cidadãos têm limite máximo de 3 livros requisitados simultaneamente para controle.  
-  - Data de início não pode ser retroativa para cidadãos.
-
-- **Itens da Requisição:**  
-  Cada livro requisitado vira um item com status inicial `'realizada'` e data real de entrega vazia.  
-
-- **Gerenciamento:**  
-  Requisições e itens podem ser editados, alterando status, data real de entrega e dias decorridos.  
-
-- **Validação:**  
-  Ao criar, verifica-se disponibilidade dos livros.  
-
-- **Cancelamento:**  
-  Só permitido antes da data início da requisição, marcando requisição como inativa, livros como disponíveis e itens como cancelados.  
-
-- **Detalhamento:**  
-  Visualização exibe dados do usuário (para admin), detalhes da requisição e lista de livros com informações específicas por item.
+- **Criação da Requisição:** Usuários criam requisições selecionando livros disponíveis.  
+  - Cidadãos têm limite de 3 livros simultâneos.  
+  - Data de início não pode ser retroativa.  
+- **Itens da Requisição:** Cada livro vira um item com status `'realizada'`.  
+- **Gerenciamento:** Edição de status, data real de entrega e dias decorridos.  
+- **Validação:** Verifica disponibilidade ao criar requisições.  
+- **Cancelamento:** Permitido apenas antes da data de início.  
+- **Detalhamento:** Visualização completa do usuário, livros e status por item.
 
 ---
 
-## Testes e População de Dados
+## Testes Automatizados com Pest
 
-- Factories configuradas para gerar dados realistas para livros, editoras e autores.  
-- Seeders com opção de usar factorys ou integração com API do Google Books.
-- Testes automatizados para validar relacionamentos e regras de negócio.
+Este projeto utiliza **Pest** como framework de testes, substituindo os testes unitários padrão do Laravel.
+
+### 1. Instalando o Pest
+
+```
+composer require pestphp/pest --dev
+composer require pestphp/pest-plugin-laravel --dev
+php artisan pest:install
+```
+
+Isso instalará o Pest e criará a estrutura inicial de testes (tests/Feature e tests/Unit) pronta para uso.
+
+### 2. Convertendo testes existentes do PHPUnit
+
+Se você já possui testes em PHPUnit, é possível converter rapidamente para Pest usando o drift:
+
+```
+composer require pestphp/drift --dev
+./vendor/bin/drift
+```
+O Drift analisa seus testes PHPUnit existentes e gera versões equivalentes em Pest, preservando toda a lógica e asserts.
+
+**Exemplo de conversão:**
+
+- Antes (PHPUnit):
+
+```
+public function test_example()
+{
+    $this->assertTrue(true);
+}
+```
+
+- Depois (Pest):
+
+```
+it('passes an example test', function () {
+    expect(true)->toBeTrue();
+});
+```
+
+### 3. Estrutura de Testes
+
+- tests/Unit: Testes unitários de modelos, factories, e regras de negócio.
+
+- tests/Feature: Testes de integração e funcionalidades completas, como rotas, autenticação e Livewire.
+
+Agora todos os testes neste projeto foram convertidos para Pest, garantindo sintaxe moderna e legível.
+
+### 4. Plugins Oficiais do Pest
+
+O Pest possui uma série de plugins oficiais que adicionam funcionalidades extras, como testes de cobertura, testes de Livewire, HTTP e mais:
+
+- [Documentação de Plugins do Pest](https://pestphp.com/docs/plugins)
+
+**Exemplos de plugins úteis para Laravel:**
+
+- **pest-plugin-laravel**: Integrações adicionais com Laravel.  
+- **pest-plugin-livewire**: Facilita testes de componentes Livewire.  
+- **pest-plugin-expectations**: Sintaxe mais expressiva para asserts.  
+
+Para instalar um plugin, basta usar:
+
+```
+composer require <plugin-name> --dev
+```
+### 5. Executando os testes
+
+```
+php artisan test
+# ou
+./vendor/bin/pest
+```
+- Para rodar testes específicos:
+
+```
+./vendor/bin/pest --filter=UpdatePasswordTest
+```
 
 ---
 
@@ -232,8 +275,8 @@ Crie manualmente um arquivo vazio `database.sqlite` na pasta `database`
 DB_CONNECTION=sqlite
 DB_DATABASE=database/database.sqlite
 
-SEEDER_TYPE=api (Coloca api ou faker como prefere popular sua base)
-BOOK_API_QUERY=laravel (Coloca o tema que o seeder vai popular a base)
+SEEDER_TYPE=api # ou faker - como prefere popular sua base para teste
+BOOK_API_QUERY=laravel  # tema que o seeder vai popular a base para teste
 
 ```
 

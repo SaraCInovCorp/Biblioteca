@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\BookRequest;
 use App\Models\User;
 use Carbon\Carbon;
+use Faker\Factory as FakerFactory;
 
 class BookRequestFactory extends Factory
 {
@@ -13,7 +14,8 @@ class BookRequestFactory extends Factory
 
     public function definition()
     {
-        $startDate = $this->faker->dateTimeBetween('-15 days', 'now');
+        $faker = FakerFactory::create();
+        $startDate = $faker->dateTimeBetween('-15 days', 'now');
         $endDate = (clone $startDate)->modify('+5 days');
 
         return [
@@ -22,8 +24,8 @@ class BookRequestFactory extends Factory
             'data_fim' => $endDate,
             'lembrete_enviado_em' => null,
             'lembrete_enviado_para' => null, 
-            'notas' => $this->faker->boolean(30) ? $this->faker->sentence() : null,
-            'ativo' => $this->faker->boolean(85),
+            'notas' => $faker->boolean(30) ? $faker->sentence() : null,
+            'ativo' => $faker->boolean(85),
         ];
     }
 }

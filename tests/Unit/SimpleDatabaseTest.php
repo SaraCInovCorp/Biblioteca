@@ -1,21 +1,12 @@
 <?php
 
-namespace Tests\Unit;
-
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\User;
 use Illuminate\Support\Facades\Schema;
 
 
-class SimpleDatabaseTest extends TestCase
-{
-    use RefreshDatabase;
+uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
-    public function test_user_factory_works()
-    {
-        $user = User::factory()->create();
-        $this->assertDatabaseHas('users', ['id' => $user->id]);
-    }
-}
-
+test('user factory works', function () {
+    $user = User::factory()->create();
+    $this->assertDatabaseHas('users', ['id' => $user->id]);
+});

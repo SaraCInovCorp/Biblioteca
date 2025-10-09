@@ -1,32 +1,25 @@
 <?php
 
-namespace Tests\Unit;
-
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\User;
 use Illuminate\Support\Facades\Schema;
 use App\Models\BookRequest;
 
-class BookRequestManualTest extends TestCase
-{
-    use RefreshDatabase;
 
-    public function test_manual_book_request_creation()
-    {
-        $user = User::factory()->create();
+uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
-        $bookRequest = BookRequest::create([
-            'user_id' => $user->id,
-            'data_inicio' => now(),
-            'data_fim' => now()->addDay(),
-            'ativo' => true,
-            'notas' => 'Teste manual',
-        ]);
+test('manual book request creation', function () {
+    $user = User::factory()->create();
 
-        $this->assertDatabaseHas('book_requests', [
-            'id' => $bookRequest->id,
-            'user_id' => $user->id,
-        ]);
-    }
-}
+    $bookRequest = BookRequest::create([
+        'user_id' => $user->id,
+        'data_inicio' => now(),
+        'data_fim' => now()->addDay(),
+        'ativo' => true,
+        'notas' => 'Teste manual',
+    ]);
+
+    $this->assertDatabaseHas('book_requests', [
+        'id' => $bookRequest->id,
+        'user_id' => $user->id,
+    ]);
+});

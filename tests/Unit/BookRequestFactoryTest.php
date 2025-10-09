@@ -1,24 +1,17 @@
 <?php
 
-namespace Tests\Unit;
-
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\BookRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 
-class BookRequestFactoryTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    public function test_factory_creates_book_request()
-    {
-        $bookRequest = BookRequest::factory()->create();
+test('factory creates book request', function () {
+    $bookRequest = BookRequest::factory()->create();
 
-        $this->assertDatabaseHas('book_requests', [
-            'id' => $bookRequest->id,
-        ]);
-    }
-}
+    $this->assertDatabaseHas('book_requests', [
+        'id' => $bookRequest->id,
+    ]);
+});

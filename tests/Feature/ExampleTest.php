@@ -1,19 +1,19 @@
 <?php
 
-namespace Tests\Feature;
+use App\Models\User;
+use App\Models\Livro;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+uses(RefreshDatabase::class); // <-- Roda as migrations antes de cada teste
 
-class ExampleTest extends TestCase
-{
-    /**
-     * A basic test example.
-     */
-    public function test_the_application_returns_a_successful_response(): void
-    {
-        $response = $this->get('/');
+it('the application returns a successful response', function () {
+   $user = User::factory()->create();
 
-        $response->assertStatus(200);
-    }
-}
+    Livro::factory()->count(6)->create([
+        'user_id' => $user->id, 
+    ]);
+
+    $response = $this->get('/');
+
+    $response->assertStatus(200);
+});

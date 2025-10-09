@@ -1,36 +1,22 @@
 <?php
 
-namespace Tests\Feature;
-
-use Tests\TestCase;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 
-class PasswordResetLoggingTest extends TestCase
-{
-    use RefreshDatabase;
 
-    public function testPasswordResetGeneratesActivityLog()
-    {
-        $user = User::factory()->create();
+uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
-        // Intercepta chamadas para Log::info para confirmar execução do listener
-        Log::shouldReceive('info')
-            ->once()
-            ->withArgs(function ($msg) use ($user) {
-                return str_contains($msg, 'Capturou evento PasswordReset') && str_contains($msg, (string)$user->id);
-            });
+test('password reset generates activity log', function () {
+    $user = User::factory()->create();
 
-        // Dispara o evento, que deve ativar o listener que registra atividade
-        event(new PasswordReset($user));
+   Log::spy();
 
-        // Confirma que o registro de atividade foi criado no banco
-        $this->assertDatabaseHas('activity_log', [
-            'causer_id' => $user->id,
-            'event' => 'reset',
-            'log_name' => 'auth',
-        ]);
-    }
-}
+    event(new PasswordReset($user));
+
+    $this->assertDatabaseHas('activity_log', [
+        'causer_id' => $user->id,
+        'event' => 'reset',
+        'log_name' => 'auth',
+    ]);
+});

@@ -1,16 +1,19 @@
 <?php
 
-namespace Tests\Unit;
+use App\Models\User;
+use App\Models\Livro;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-use PHPUnit\Framework\TestCase;
+uses(RefreshDatabase::class); // <-- Roda as migrations antes de cada teste
 
-class ExampleTest extends TestCase
-{
-    /**
-     * A basic test example.
-     */
-    public function test_that_true_is_true(): void
-    {
-        $this->assertTrue(true);
-    }
-}
+it('the application returns a successful response', function () {
+    $user = User::factory()->create();
+
+    Livro::factory()->count(6)->create([
+        'user_id' => $user->id, 
+    ]);
+
+    $response = $this->get('/');
+
+    $response->assertStatus(200);
+});

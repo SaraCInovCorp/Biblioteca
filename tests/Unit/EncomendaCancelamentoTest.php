@@ -1,79 +1,69 @@
 <?php
 
-namespace Tests\Unit;
-
-use Tests\TestCase;
 use App\Models\Encomenda;
 use App\Models\User;
 use App\Models\Endereco;
 use App\Models\Carrinho;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-class EncomendaCancelamentoTest extends TestCase
-{
-    use RefreshDatabase;
+uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
-    public function test_cancelamento_solicitado_campo_boolean()
-    {
-        $user = User::factory()->create();
-        $endereco = Endereco::factory()->for($user)->create();
-        $carrinho = Carrinho::factory()->for($user)->create();
+test('cancelamento solicitado campo boolean', function () {
+    $user = User::factory()->create();
+    $endereco = Endereco::factory()->for($user)->create();
+    $carrinho = Carrinho::factory()->for($user)->create();
 
-        $encomenda = Encomenda::factory()
-            ->for($user)
-            ->for($endereco)
-            ->for($carrinho)
-            ->create([
-                'cancelamento_solicitado' => true,
-            ]);
+    $encomenda = Encomenda::factory()
+        ->for($user)
+        ->for($endereco)
+        ->for($carrinho)
+        ->create([
+            'cancelamento_solicitado' => true,
+        ]);
 
-        $this->assertTrue($encomenda->cancelamento_solicitado);
+    expect($encomenda->cancelamento_solicitado)->toBeTrue();
 
-        $encomendaFalse = Encomenda::factory()
-            ->for($user)
-            ->for($endereco)
-            ->for($carrinho)
-            ->create([
-                'cancelamento_solicitado' => false,
-            ]);
+    $encomendaFalse = Encomenda::factory()
+        ->for($user)
+        ->for($endereco)
+        ->for($carrinho)
+        ->create([
+            'cancelamento_solicitado' => false,
+        ]);
 
-        $this->assertFalse($encomendaFalse->cancelamento_solicitado);
-    }
+    expect($encomendaFalse->cancelamento_solicitado)->toBeFalse();
+});
 
-    public function test_only_cancelamento_solicitado_can_be_approved()
-    {
-        $user = User::factory()->create();
-        $endereco = Endereco::factory()->for($user)->create();
-        $carrinho = Carrinho::factory()->for($user)->create();
+test('only cancelamento solicitado can be approved', function () {
+    $user = User::factory()->create();
+    $endereco = Endereco::factory()->for($user)->create();
+    $carrinho = Carrinho::factory()->for($user)->create();
 
-        // Pedido sem solicitação de cancelamento não pode ser aprovado
-        $encomenda = Encomenda::factory()
-            ->for($user)
-            ->for($endereco)
-            ->for($carrinho)
-            ->create([
-                'cancelamento_solicitado' => false,
-                'status' => 'pendente',
-            ]);
+    // Pedido sem solicitação de cancelamento não pode ser aprovado
+    $encomenda = Encomenda::factory()
+        ->for($user)
+        ->for($endereco)
+        ->for($carrinho)
+        ->create([
+            'cancelamento_solicitado' => false,
+            'status' => 'pendente',
+        ]);
 
-        $this->assertFalse($encomenda->cancelamento_solicitado);
+    expect($encomenda->cancelamento_solicitado)->toBeFalse();
 
-        // Simular tentativa de aprovação, que na lógica real deveria falhar
-        $canApprove = $encomenda->cancelamento_solicitado === true;
+    // Simular tentativa de aprovação, que na lógica real deveria falhar
+    $canApprove = $encomenda->cancelamento_solicitado === true;
 
-        $this->assertFalse($canApprove);
+    expect($canApprove)->toBeFalse();
 
-        // Pedido com solicitação poderá passar aprovação
-        $encomendaAprovado = Encomenda::factory()
-            ->for($user)
-            ->for($endereco)
-            ->for($carrinho)
-            ->create([
-                'cancelamento_solicitado' => true,
-                'status' => 'pendente',
-            ]);
+    // Pedido com solicitação poderá passar aprovação
+    $encomendaAprovado = Encomenda::factory()
+        ->for($user)
+        ->for($endereco)
+        ->for($carrinho)
+        ->create([
+            'cancelamento_solicitado' => true,
+            'status' => 'pendente',
+        ]);
 
-        $this->assertTrue($encomendaAprovado->cancelamento_solicitado);
-    }
-}
-
+    expect($encomendaAprovado->cancelamento_solicitado)->toBeTrue();
+});

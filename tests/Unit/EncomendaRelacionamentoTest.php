@@ -1,50 +1,42 @@
 <?php
 
-namespace Tests\Unit;
-
-use Tests\TestCase;
 use App\Models\Endereco;
 use App\Models\Carrinho;
 use App\Models\CarrinhoItem;
 use App\Models\Encomenda;
 use App\Models\EncomendaItem;
 use App\Models\User;
-use App\Models\Livro; 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\Livro;
 use Illuminate\Support\Facades\Schema;
 
-class EncomendaRelacionamentoTest extends TestCase
-{
-    use RefreshDatabase;
 
-    public function test_encomenda_relations_and_items()
-    {
-        $user = User::factory()->create();
-        $endereco = Endereco::factory()->for($user)->create();
-        $carrinho = Carrinho::factory()->for($user)->create();
+uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
-        $encomenda = Encomenda::factory()
-            ->for($user)
-            ->for($endereco)
-            ->for($carrinho)
-            ->create();
+test('encomenda relations and items', function () {
+    $user = User::factory()->create();
+    $endereco = Endereco::factory()->for($user)->create();
+    $carrinho = Carrinho::factory()->for($user)->create();
 
-        $livros = Livro::factory()->count(2)->create();
+    $encomenda = Encomenda::factory()
+        ->for($user)
+        ->for($endereco)
+        ->for($carrinho)
+        ->create();
 
-        foreach ($livros as $livro) {
-            EncomendaItem::factory()->for($encomenda)->for($livro)->create();
-        }
+    $livros = Livro::factory()->count(2)->create();
 
-        $encomenda->refresh();
-
-        $this->assertEquals($user->id, $encomenda->user->id);
-        $this->assertEquals($endereco->id, $encomenda->endereco->id);
-        $this->assertEquals($carrinho->id, $encomenda->carrinho->id); 
-        $this->assertCount(2, $encomenda->items);
-
-        foreach ($encomenda->items as $item) {
-            $this->assertTrue($livros->contains($item->livro));
-        }
+    foreach ($livros as $livro) {
+        EncomendaItem::factory()->for($encomenda)->for($livro)->create();
     }
 
-}
+    $encomenda->refresh();
+
+    expect($encomenda->user->id)->toEqual($user->id);
+    expect($encomenda->endereco->id)->toEqual($endereco->id);
+    expect($encomenda->carrinho->id)->toEqual($carrinho->id);
+    expect($encomenda->items)->toHaveCount(2);
+
+    foreach ($encomenda->items as $item) {
+        expect($livros->contains($item->livro))->toBeTrue();
+    }
+});
