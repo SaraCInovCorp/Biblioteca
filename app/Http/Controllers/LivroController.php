@@ -460,7 +460,7 @@ class LivroController extends Controller
         return redirect()->route('livros.index')->with('success', 'Livro atualizado com sucesso!');
     }
 
-    public function destroy(Livro $livro)
+    public function destroy(Request $request, Livro $livro)
     {
         $livro->status = $livro->status === 'disponivel' ? 'indisponivel' : 'disponivel';
         $livro->save();

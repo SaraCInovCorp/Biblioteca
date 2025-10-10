@@ -173,7 +173,7 @@ Route::post('carrinho/limpar', [CarrinhoController::class, 'limparCarrinho'])->n
 Route::post('carrinho/adicionar/{livro}', [CarrinhoController::class, 'adicionar'])->name('carrinho.adicionar');
 Route::put('carrinho/atualizar/{item}', [CarrinhoController::class, 'atualizar'])->name('carrinho.atualizar')->middleware('auth');
 Route::post('carrinho/atualizar-sessao', [CarrinhoController::class, 'atualizarSessao'])->name('carrinho.atualizar.sessao');
-Route::post('carrinho/remover/{item}', [CarrinhoController::class, 'remover'])->name('carrinho.remover')->middleware('auth');
+Route::delete('carrinho/remover/{item}', [CarrinhoController::class, 'remover'])->name('carrinho.remover')->middleware('auth');
 Route::post('carrinho/remover-sessao', [CarrinhoController::class, 'removerSessao'])->name('carrinho.remover.sessao');
 
 Route::get('livros/export/excel', [LivroController::class, 'exportExcel'])->name('livros.export.excel');

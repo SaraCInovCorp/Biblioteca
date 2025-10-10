@@ -138,6 +138,8 @@ class ManageAddresses extends Component
         activity()
         ->causedBy($user)
         ->performedOn($address)
+        ->event('saveAddress')
+        ->useLog('saveAddress-endereco')
         ->withProperties([
             'ip' => request()->ip(),
             'browser' => request()->header('User-Agent'),
@@ -169,6 +171,9 @@ class ManageAddresses extends Component
 
         activity()
         ->causedBy($user)
+        ->performedOn($address)
+        ->event('deleteAddress')
+        ->useLog('deleteAddress-endereco')
         ->withProperties([
             'ip' => request()->ip(),
             'browser' => request()->header('User-Agent'),

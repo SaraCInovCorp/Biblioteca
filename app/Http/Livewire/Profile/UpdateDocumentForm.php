@@ -54,6 +54,8 @@ class UpdateDocumentForm extends Component
         activity()
         ->causedBy($user)
         ->performedOn($doc)
+        ->event('updateDocument')
+        ->useLog('updateDocument-documento')
         ->withProperties([
             'ip' => request()->ip(),
             'browser' => request()->header('User-Agent'),

@@ -38,6 +38,8 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
         }
         activity()
         ->causedBy($user)
+        ->performedOn($user)
+        ->useLog('profile_updated')
         ->withProperties([
             'ip' => request()->ip(),
             'browser' => request()->header('User-Agent'),

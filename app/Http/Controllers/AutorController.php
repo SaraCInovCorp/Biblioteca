@@ -80,6 +80,8 @@ class AutorController extends Controller
 
         activity()
         ->causedBy(auth()->user())
+        ->event('exportExcel')
+        ->useLog('exportExcel-autor')
         ->withProperties([
             'ip' => $request->ip(),
             'user_agent' => $request->header('User-Agent'),
@@ -100,6 +102,8 @@ class AutorController extends Controller
 
         activity()
         ->causedBy(auth()->user())
+        ->event('exportPdf')
+        ->useLog('exportPdf-autor')
         ->withProperties([
             'ip' => $request->ip(),
             'user_agent' => $request->header('User-Agent'),
@@ -130,6 +134,8 @@ class AutorController extends Controller
         activity()
             ->causedBy(Auth::user())
             ->performedOn($autor)
+            ->event('update')
+            ->useLog('update-autor')
             ->withProperties([
                 'ip' => $request->ip(),
                 'user_agent' => $request->header('User-Agent'),
@@ -152,6 +158,8 @@ class AutorController extends Controller
         activity()
             ->causedBy(Auth::user())
             ->performedOn($autor)
+            ->event('destroy')
+            ->useLog('destroy-autor')
             ->withProperties([
                 'ip' => $request->ip(),
                 'user_agent' => $request->header('User-Agent'),
@@ -187,6 +195,8 @@ class AutorController extends Controller
         activity()
             ->causedBy(Auth::user())
             ->performedOn($autor)
+            ->event('store')
+            ->useLog('store-autor')
             ->withProperties([
                 'ip' => $request->ip(),
                 'user_agent' => $request->header('User-Agent'),
